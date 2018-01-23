@@ -25,7 +25,7 @@ class ClassModel():
         self.nu = nu
         self.n_splits = n_splits
 
-        X, I, X_hat, I_hat = boxcar(X,I)
+        X, I, X_hat, I_hat = self.boxcar(X,I)
 
         self.X = X
         self.I = I
@@ -33,7 +33,7 @@ class ClassModel():
         self.I_hat = I_hat
         self.R_hat = np.concatenate(X_hat,I_hat,axis=0)
 
-    def boxcar(self):
+    def boxcar(self,X,I):
         # windows
         win_c = self.D_c_u - self.D_c_l + 1
         win_i = self.D_s_u - self.D_s_l + 1
@@ -53,29 +53,24 @@ class ClassModel():
         roll_c = hl_c - self.D_c_u  # self.D_c_l + hl_c
 
         ## each cell
-        X_hat = np.zeros(spikes.shape)
-        I_hat = np.zeros(stimuli.shape)
+        X_hat = np.zeros(X.shape)
+        I_hat = np.zeros(I.shape)
 
         # conv xc
         for i in np.arange(X_hat.shape[1]):
-            xc = spikes[:, i]
+            xc = X[:, i]
             xcc = np.convolve(xc, ker_c, mode='full')[hl_c:-hl_c]
             X_hat[:, i] = xcc
 
         # conv xi
         for i in np.arange(I_hat.shape[1]):
-            xi = stimuli[:, i]
+            xi = I[:, i]
             xic = np.convolve(xi, ker_i, mode='full')[hl_i:-hl_i]
-            # print(xic.shape)
             I_hat[:, i] = xic
 
-        # roll back convolved spikes
+        # roll back convolved spikes and visual stimuli
         X_hat = np.roll(X_hat, shift=roll_c, axis=0)
-        # roll back convolved input
         I_hat = np.roll(I_hat, shift=roll_i, axis=0)
-
-        X = np.array(spikes)
-        I = np.array(stimuli)
 
         # trim "corrupted" frames
         trim = np.maximum(abs(roll_c), abs(roll_i))
@@ -86,3 +81,15 @@ class ClassModel():
         X_hat = X_hat[trim:, :]
 
         return I_hat, X_hat, X, I
+
+    def addData(self,X,I):
+
+        X, I, X_hat, I_hat = self.boxcar(X, I)
+
+        R_hat = np.concatenate(X_hat, I_hat, axis=0)
+
+        self.X = np.append(self.X,X, axis=1)
+        self.I = np.append(self.I,I, axis=1)
+        self.X_hat = np.append(self.X_hat,X_hat, axis=1)
+        self.I_hat = np.append(self.I_hat,I_hat, axis=1)
+        self.R_hat = np.append(self.I_hat, I_hat, axis=1)
