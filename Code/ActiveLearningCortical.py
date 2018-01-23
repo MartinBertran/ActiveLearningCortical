@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.optimize import minimize
 
 
 class ClassModel():
@@ -92,4 +93,51 @@ class ClassModel():
         self.I = np.append(self.I,I, axis=1)
         self.X_hat = np.append(self.X_hat,X_hat, axis=1)
         self.I_hat = np.append(self.I_hat,I_hat, axis=1)
-        self.R_hat = np.append(self.I_hat, I_hat, axis=1)
+        self.R_hat = np.append(self.R_hat, R_hat, axis=1)
+
+    def MAP(self, c, PA_c,theta_ini=None):
+
+        #build regressors, intial values, and select target variable
+        R_c = self.R_hat[PA_c,:]
+        X_c = self.X[c,:]
+
+        #build initialization
+        if theta_ini is None:
+            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[0])
+        theta_ini_local = theta_ini[PA_c]
+
+
+        def MAP_likelihood(X_c,R_c, theta):
+
+            nabla = np.dot(R_c,theta)
+            p_lambda = np.logaddexp(0, nabla) / self.k + 1e-20
+            likelihood = np.sum(X_c * np.log(p_lambda) - p_lambda)
+            return -likelihood
+
+        def grad_MAP_likelihood(X_c,R_c, theta):
+
+            nabla = np.dot(R_c, theta)
+            core = ((1 - (1 / (1 + np.exp(nabla)))) * ((X_c / (np.logaddexp(0, nabla) + 1e-20)) - (1.0 / self.k)))[:,np.newaxis]
+
+            d_lambda_d_theta = np.sum(X_c * core, axis=0)  # MLE derivative term
+            return -d_lambda_d_theta
+
+        # Minimization
+        f = lambda theta: MAP_likelihood(X_c,R_c, theta)
+        df = lambda theta: grad_MAP_likelihood(X_c,R_c, theta)
+
+
+        options = {}
+        options['maxiter'] = 1000
+        options['disp'] = False
+        options['ftol'] = 1e-14
+
+        theta_MAP_local = minimize(f, theta_ini_local, jac=df, options=options)
+
+        theta_MAP  = np.zeros(theta_ini.shape)
+        theta_MAP[PA_c] = theta_MAP_local
+        return theta_MAP_local
+
+
+
+
