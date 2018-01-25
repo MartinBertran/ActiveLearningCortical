@@ -9,19 +9,20 @@ class ClassModel():
     Parameters
     ----------
 
-    testtttt
+
     Reference
     ---------
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k, X, I, gamma, nu, n_splits):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits):
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
         self.D_s_l = D_s_l
         self.D_s_u = D_s_u
         self.k = k
+        self.kappa = kappa
         self.gamma = gamma
         self.nu = nu
         self.n_splits = n_splits
@@ -95,29 +96,36 @@ class ClassModel():
         self.I_hat = np.append(self.I_hat,I_hat, axis=1)
         self.R_hat = np.append(self.R_hat, R_hat, axis=1)
 
-    def MAP(self, c, PA_c,theta_ini=None):
+    def computeMAP(self, c, PA_c,theta_ini=None, index_mask=None):
 
         #build regressors, intial values, and select target variable
-        R_c = self.R_hat[PA_c,:]
-        X_c = self.X[c,:]
+        if index_mask is None:
+            R_c = self.R_hat[PA_c,:]
+            X_c = self.X[c,:]
+        else:
+            R_c = self.R_hat[PA_c, index_mask]
+            X_c = self.X[c, index_mask]
+
+        #append bias vector
+        R_c = np.append(R_c,np.ones([1,R_c.shape[1]]),axis=0)
 
         #build initialization
         if theta_ini is None:
-            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[0])
-        theta_ini_local = theta_ini[PA_c]
+            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[0]+1)
+        theta_ini_local = theta_ini[np.append(PA_c,[True]).astype('bool')]
 
 
         def MAP_likelihood(X_c,R_c, theta):
 
             nabla = np.dot(R_c,theta)
-            p_lambda = np.logaddexp(0, nabla) / self.k + 1e-20
+            p_lambda = np.logaddexp(0, nabla) / self.kappa + 1e-20
             likelihood = np.sum(X_c * np.log(p_lambda) - p_lambda)
             return -likelihood
 
         def grad_MAP_likelihood(X_c,R_c, theta):
 
             nabla = np.dot(R_c, theta)
-            core = ((1 - (1 / (1 + np.exp(nabla)))) * ((X_c / (np.logaddexp(0, nabla) + 1e-20)) - (1.0 / self.k)))[:,np.newaxis]
+            core = ((1 - (1 / (1 + np.exp(nabla)))) * ((X_c / (np.logaddexp(0, nabla) + 1e-20)) - (1.0 / self.kappa)))[:,np.newaxis]
 
             d_lambda_d_theta = np.sum(X_c * core, axis=0)  # MLE derivative term
             return -d_lambda_d_theta
@@ -137,6 +145,58 @@ class ClassModel():
         theta_MAP  = np.zeros(theta_ini.shape)
         theta_MAP[PA_c] = theta_MAP_local
         return theta_MAP_local
+
+    def forwardModelProposal(self,c,PA_c, split_indexes):
+        '''
+        :param c:
+        :param PA_c:
+        :param split_indexes: n_splits x total_samples boolean masks of each spliting subset
+        :return:
+        '''
+
+        BIC_split = np.inf([self.n_splits, self.R_hat.shape[0]])
+        pval_split = np.ones([self.n_splits, self.R_hat.shape[0]])
+
+        BIC_full = np.inf([self.R_hat.shape[0]])
+        pval_full = np.ones([self.R_hat.shape[0]])
+
+
+        # go through all regressors not currently in the model
+        for j in np.where(PA_c==False)[0]:
+            PA_c_r = np.array(PA_c)
+            PA_c_r[j] = True
+
+            # evaluate results for every split
+            for split in np.arange(self.n_splits):
+                split_idx = split_indexes[split,:]
+
+                BIC, Likelihood, pval, theta_map, fisher = evaluateRegressors(c, PA_c_r,index_mask=split_idx)
+
+                BIC_split[split,j] = BIC
+                pval_split[split,j] = pval
+
+            # evaluate results over full dataset
+            BIC, Likelihood, pval, theta_map, fisher = evaluateRegressors(c, PA_c_r, index_mask=None)
+
+            BIC_full[j]=BIC
+            pval_full[j]=pval
+
+        #Finally, compute score
+
+        pval_score = np.maximum(np.median(pval_split,axis=0), pval_full)
+        BIC_score = np.maximum(np.median(BIC_split,axis=0), BIC_full)
+
+
+        # get index of regressors that simultaneoulsy satisfy BIC_score < 0 and pval_score < gamma
+        index_satisfactory = np.where(BIC_score<0 and pval_score<self.gamma)[0]
+
+        #sort remaining regressors in ascending order of BIC score, and select the first k regressors
+        sorted_remainder =  np.argsort(BIC_score[index_satisfactory])[:self.k]
+
+        best_candidates = index_satisfactory[sorted_remainder]
+
+        return best_candidates
+
 
 
 
