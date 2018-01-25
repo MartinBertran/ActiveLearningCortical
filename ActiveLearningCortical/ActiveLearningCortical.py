@@ -33,7 +33,7 @@ class ClassModel():
         self.I = I
         self.X_hat = X_hat
         self.I_hat = I_hat
-        self.R_hat = np.concatenate(X_hat,I_hat,axis=0)
+        self.R_hat = np.concatenate(X_hat,I_hat,axis=1)
 
     def boxcar(self,X,I):
         # windows
@@ -88,30 +88,30 @@ class ClassModel():
 
         X, I, X_hat, I_hat = self.boxcar(X, I)
 
-        R_hat = np.concatenate(X_hat, I_hat, axis=0)
+        R_hat = np.concatenate(X_hat, I_hat, axis=1)
 
-        self.X = np.append(self.X,X, axis=1)
-        self.I = np.append(self.I,I, axis=1)
-        self.X_hat = np.append(self.X_hat,X_hat, axis=1)
-        self.I_hat = np.append(self.I_hat,I_hat, axis=1)
-        self.R_hat = np.append(self.R_hat, R_hat, axis=1)
+        self.X = np.append(self.X,X, axis=0)
+        self.I = np.append(self.I,I, axis=0)
+        self.X_hat = np.append(self.X_hat,X_hat, axis=0)
+        self.I_hat = np.append(self.I_hat,I_hat, axis=0)
+        self.R_hat = np.append(self.R_hat, R_hat, axis=0)
 
     def computeMAP(self, c, PA_c,theta_ini=None, index_mask=None):
 
         #build regressors, intial values, and select target variable
         if index_mask is None:
-            R_c = self.R_hat[PA_c,:]
-            X_c = self.X[c,:]
+            R_c = self.R_hat[:,PA_c]
+            X_c = self.X[:,c]
         else:
-            R_c = self.R_hat[PA_c, index_mask]
-            X_c = self.X[c, index_mask]
+            R_c = self.R_hat[index_mask,PA_c]
+            X_c = self.X[index_mask, c]
 
         #append bias vector
-        R_c = np.append(R_c,np.ones([1,R_c.shape[1]]),axis=0)
+        R_c = np.append(R_c,np.ones([1,R_c.shape[0]]),axis=1)
 
         #build initialization
         if theta_ini is None:
-            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[0]+1)
+            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[1]+1)
         theta_ini_local = theta_ini[np.append(PA_c,[True]).astype('bool')]
 
 
@@ -154,11 +154,11 @@ class ClassModel():
         :return:
         '''
 
-        BIC_split = np.inf([self.n_splits, self.R_hat.shape[0]])
-        pval_split = np.ones([self.n_splits, self.R_hat.shape[0]])
+        BIC_split = np.inf([self.n_splits, self.R_hat.shape[1]])
+        pval_split = np.ones([self.n_splits, self.R_hat.shape[1]])
 
-        BIC_full = np.inf([self.R_hat.shape[0]])
-        pval_full = np.ones([self.R_hat.shape[0]])
+        BIC_full = np.inf([self.R_hat.shape[1]])
+        pval_full = np.ones([self.R_hat.shape[1]])
 
 
         # go through all regressors not currently in the model
