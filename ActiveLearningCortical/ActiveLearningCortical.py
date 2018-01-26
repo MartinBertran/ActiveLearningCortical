@@ -127,11 +127,12 @@ class ClassModel():
 
         #append bias vector
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
+        PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
 
         #build initialization
         if theta_ini is None:
             theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[1]+1)
-        theta_ini_local = theta_ini[np.append(PA_c,[True]).astype('bool')]
+        theta_ini_local = theta_ini[PA_c_with_bias]
 
 
 
@@ -149,7 +150,7 @@ class ClassModel():
         theta_MAP_local=theta_MAP_local.x
 
         theta_MAP  = np.zeros(theta_ini.shape)
-        theta_MAP[PA_c] = theta_MAP_local
+        theta_MAP[PA_c_with_bias] = theta_MAP_local
         return theta_MAP
 
     def forwardModelProposal(self,c,PA_c, split_indexes):
