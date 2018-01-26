@@ -114,20 +114,23 @@ class ClassModel():
             theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[1]+1)
         theta_ini_local = theta_ini[np.append(PA_c,[True]).astype('bool')]
 
-
-        def MAP_likelihood(X_c,R_c, theta):
-
-            nabla = np.dot(R_c,theta)
-            p_lambda = np.logaddexp(0, nabla) / self.kappa + 1e-20
-            likelihood = np.sum(X_c * np.log(p_lambda) - p_lambda)
-            return -likelihood
-
-        def grad_MAP_likelihood(X_c,R_c, theta):
+        def MAP_likelihood(X_c, R_c, theta):
 
             nabla = np.dot(R_c, theta)
-            core = ((1 - (1 / (1 + np.exp(nabla)))) * ((X_c / (np.logaddexp(0, nabla) + 1e-20)) - (1.0 / self.kappa)))[:,np.newaxis]
+            p_lambda = np.logaddexp(0, self.kappa * nabla) / self.kappa + 1e-20
+            likelihood = X_c * np.log(p_lambda) - p_lambda
+            likelihood = np.sum(likelihood)
+            return -likelihood
 
-            d_lambda_d_theta = np.sum(X_c * core, axis=0)  # MLE derivative term
+        def grad_MAP_likelihood(X_c, R_c, theta):
+
+            nabla = np.dot(R_c, theta)
+            p_lambda = np.logaddexp(0, self.kappa * nabla) / self.kappa + 1e-20
+            d_like_d_lambda = (X_c / p_lambda - p_lambda)
+            d_lambda_d_nabla = 1 - (1 / (1 + np.exp(nabla * self.kappa)))
+            d_nabla_d_theta = R_c
+            d_lambda_d_theta = (d_like_d_lambda * d_lambda_d_nabla)[:, np.newaxis] * d_nabla_d_theta
+            d_lambda_d_theta = np.sum(d_lambda_d_theta, axis=0)
             return -d_lambda_d_theta
 
         # Minimization
