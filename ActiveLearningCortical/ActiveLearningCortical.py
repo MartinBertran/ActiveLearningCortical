@@ -96,6 +96,25 @@ class ClassModel():
         self.I_hat = np.append(self.I_hat,I_hat, axis=0)
         self.R_hat = np.append(self.R_hat, R_hat, axis=0)
 
+    def MAP_likelihood(self,X_c, R_c, theta, kappa):
+
+        nabla = np.dot(R_c, theta)
+        p_lambda = np.logaddexp(0, kappa * nabla) / kappa + 1e-20
+        likelihood = X_c * np.log(p_lambda) - p_lambda
+        likelihood = np.sum(likelihood)
+        return -likelihood
+
+    def grad_MAP_likelihood(self,X_c, R_c, theta, kappa):
+
+        nabla = np.dot(R_c, theta)
+        p_lambda = np.logaddexp(0, kappa * nabla) / kappa + 1e-20
+        d_like_d_lambda = (X_c / p_lambda - 1)
+        d_lambda_d_nabla = 1 - (1 / (1 + np.exp(nabla * kappa)))
+        d_nabla_d_theta = R_c
+        d_lambda_d_theta = (d_like_d_lambda * d_lambda_d_nabla)[:, np.newaxis] * d_nabla_d_theta
+        d_lambda_d_theta = np.sum(d_lambda_d_theta, axis=0)
+        return -d_lambda_d_theta
+
     def computeMAP(self, c, PA_c,theta_ini=None, index_mask=None):
 
         #build regressors, intial values, and select target variable
@@ -114,28 +133,11 @@ class ClassModel():
             theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[1]+1)
         theta_ini_local = theta_ini[np.append(PA_c,[True]).astype('bool')]
 
-        def MAP_likelihood(X_c, R_c, theta):
 
-            nabla = np.dot(R_c, theta)
-            p_lambda = np.logaddexp(0, self.kappa * nabla) / self.kappa + 1e-20
-            likelihood = X_c * np.log(p_lambda) - p_lambda
-            likelihood = np.sum(likelihood)
-            return -likelihood
-
-        def grad_MAP_likelihood(X_c, R_c, theta):
-
-            nabla = np.dot(R_c, theta)
-            p_lambda = np.logaddexp(0, self.kappa * nabla) / self.kappa + 1e-20
-            d_like_d_lambda = (X_c / p_lambda - p_lambda)
-            d_lambda_d_nabla = 1 - (1 / (1 + np.exp(nabla * self.kappa)))
-            d_nabla_d_theta = R_c
-            d_lambda_d_theta = (d_like_d_lambda * d_lambda_d_nabla)[:, np.newaxis] * d_nabla_d_theta
-            d_lambda_d_theta = np.sum(d_lambda_d_theta, axis=0)
-            return -d_lambda_d_theta
 
         # Minimization
-        f = lambda theta: MAP_likelihood(X_c,R_c, theta)
-        df = lambda theta: grad_MAP_likelihood(X_c,R_c, theta)
+        f = lambda theta: self.MAP_likelihood(X_c,R_c, theta, self.kappa)
+        df = lambda theta: self.grad_MAP_likelihood(X_c,R_c, theta, self.kappa)
 
 
         options = {}
