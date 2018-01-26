@@ -150,7 +150,7 @@ class ClassModel():
 
         theta_MAP  = np.zeros(theta_ini.shape)
         theta_MAP[PA_c] = theta_MAP_local
-        return theta_MAP_local
+        return theta_MAP
 
     def forwardModelProposal(self,c,PA_c, split_indexes):
         '''
