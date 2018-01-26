@@ -33,7 +33,7 @@ class ClassModel():
         self.I = I
         self.X_hat = X_hat
         self.I_hat = I_hat
-        self.R_hat = np.concatenate(X_hat,I_hat,axis=1)
+        self.R_hat = np.append(X_hat,I_hat,axis=1)
 
     def boxcar(self,X,I):
         # windows
