@@ -146,6 +146,7 @@ class ClassModel():
         options['ftol'] = 1e-14
 
         theta_MAP_local = minimize(f, theta_ini_local, jac=df, options=options)
+        theta_MAP_local=theta_MAP_local.x
 
         theta_MAP  = np.zeros(theta_ini.shape)
         theta_MAP[PA_c] = theta_MAP_local
