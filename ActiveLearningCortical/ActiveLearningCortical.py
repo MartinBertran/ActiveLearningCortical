@@ -126,7 +126,7 @@ class ClassModel():
             X_c = self.X[index_mask, c]
 
         #append bias vector
-        R_c = np.append(R_c,np.ones([1,R_c.shape[0]]),axis=1)
+        R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
 
         #build initialization
         if theta_ini is None:
