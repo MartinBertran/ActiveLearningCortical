@@ -27,7 +27,7 @@ class ClassModel():
         self.nu = nu
         self.n_splits = n_splits
 
-        X, I, X_hat, I_hat = self.boxcar(X,I)
+        I_hat, X_hat, X, I = self.boxcar(X,I)
 
         self.X = X
         self.I = I
@@ -86,7 +86,7 @@ class ClassModel():
 
     def addData(self,X,I):
 
-        X, I, X_hat, I_hat = self.boxcar(X, I)
+        I_hat, X_hat, X, I = self.boxcar(X, I)
 
         R_hat = np.concatenate(X_hat, I_hat, axis=1)
 
