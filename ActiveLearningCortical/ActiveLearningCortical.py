@@ -200,6 +200,83 @@ class ClassModel():
 
         return best_candidates
 
+    def nabla(self, W, H, b):
+        R_hat = np.array(self.R_hat)
+        R_hat = np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1)
+        # Concatenate with 1's
+        theta = np.concatenate([W, H, b], axis=0)
+        nabla = np.dot(R_hat, theta)
+        return nabla
+
+    def logexplambda(self, nabla):
+        L = np.logaddexp(0, nabla * self.kappa) / self.kappa
+        dL = 1 - (1 / (1 + np.exp(nabla * self.kappa)))
+        # dL2 = (self.k/(1 + np.exp(nabla * self.k)))*(1 - (1/(1 + np.exp(nabla * self.k))))
+        dL2 = (self.kappa / (1 + np.exp(nabla * self.kappa))) * dL
+        return L, dL, dL2
+
+    def logexp_observed_fisher_info(self, c, L, dL, dL2):
+        # Load regressors and spikes of neuron c
+        R_hat = np.array(self.R_hat)
+        R_hat = np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1)
+        X_c = np.array(self.X[:, c])
+        # Build Hessian
+        diag_values = -X_c * ((dL / L) ** 2) + ((X_c / L) - 1) * dL2
+        I = R_hat.transpose() * diag_values[np.newaxis, :]
+        I = np.dot(I, R_hat)
+        return -I
+
+    def evaluateregressors(self, c, PA_c, theta_ini=None, index_samples=None):
+
+        # number of regressors
+        nr = PA_c.shape[0]
+
+        # Regressors
+        R_hat = np.array(self.R_hat)
+        R_hat = R_hat[:, PA_c]
+
+        # Neuron to model
+        X_c = np.array(self.X[:, c])
+
+        if index_samples is not None:
+            R_hat = R_hat[index_samples, :]
+            X_c = X_c[index_samples, :]
+
+        # Check that all regressors are acceptables -.-
+        mask_R = zeros(R_hat.shape)
+        mask_R[R_hat != 0] = 1
+        mask_Xc = np.tile(X_c, (nr, 1)).transpose()
+        mask_Xc[mask_Xc != 0] = 1
+        index_clean = np.sum(mask_R, axis=0) * np.sum(mask_R * mask_Xc, axis=0)
+        index_clean[index_clean > 0] = 1
+        nr_ef = np.sum(index_clean > 0)
+
+        # Effective PAc
+        PAc_ef = np.zeros(PA_c.shape)
+        PAc_ef[PA_c[index_clean > 0]] = 1
+
+        # Effective regressors
+        R_hat = R_hat[:, index_clean > 0]
+
+        # Compute MAP
+        theta_c = computeMAP(c, PAc_ef, theta_ini=theta_ini, index_samples=index_samples)
+
+        # Load MAP results on full regressors theta vector
+        theta_full_c = np.zeros([self.R_hat.shape[0] + 1])
+        if nr_ef > 0:
+            theta_full_c[PAc_ef] = theta_c[0:-1]
+        theta_full_c[-1:] = theta_c[-1:]  # bias
+
+        # Fisher
+        # Build nabla
+        nc = self.X_hat.shape[1]
+        W_c = theta_full_c[0:nc]
+        H_c = theta_full_c[nc:-1]
+        b_c = theta_full_c[-1:]
+        nabla_c = nabla(W_c, H_c, b_c)
+        L_c, dL_c, dL2_c = logexplambda(nabla_c)
+        I_c = logexp_observed_fisher_info(c, L_c, dL_c, dL2_c)
+
 
 
 
