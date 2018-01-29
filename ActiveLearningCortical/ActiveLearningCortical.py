@@ -294,19 +294,53 @@ class ClassModel():
     def elasticForwardSelection(self, c):
 
         #initialize set of active regressors to empty set
-        PA_c = np.zeros([self.n_r]).astype('bool')
+        r_prime = np.zeros([self.n_r]).astype('bool')
         theta = None
-        split_indexes=None
+
+        #make split_indexes once
+        split_samples = int(self.n_samples*self.nu)
+        split_indexes = np.zeros([self.n_splits,split_samples])
+        for j in np.arange(self.n_splits):
+            split_indexes[j,:] = np.random.choice(np.arange(self.n_samples),split_samples, replace=False)
 
         while True:
-            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, PA_c, theta_ini=theta, index_samples=split_indexes)
+
+            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=split_indexes)
+            best_candidates = self.forwardModelProposal(self,c,r_prime, split_indexes)
+
+            print(best_candidates)
+
+            if len(best_candidates)==0:
+                self.theta =theta
+                return theta, likelihood, fisherInformation, pvals, BIC
+
+            n = len(best_candidates)
+            BIC_best = BIC
+            r_best = r_prime
+            while True:
+                r_ddag = np.array(r_best)
+                r_ddag[best_candidates[:n]]=True
+                print(r_best.sum(), r_ddag.sum())
+
+                #evaluate new regressor set
+                theta_ddag, likelihood_ddag, fisherInformation_ddag, pvals_ddag, BIC_ddag = self.evaluateRegressors(
+                                        c, r_ddag, theta_ini=theta,
+                                        index_samples=split_indexes)
+
+                if (np.max(pvals_ddag)<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
+                    r_best = r_ddag
+                    BIC_best = BIC_ddag
+
+                if (BIC_ddag>= BIC_best) and (r_best!= r_prime): #Already got a better set in the descending sequence, update and exit loop
+                    r_prime = r_best
+                    break
+
+                n -=1
 
 
 
 
 
-            if cond:
-                break
 
 
 
