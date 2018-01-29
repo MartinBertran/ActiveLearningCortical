@@ -35,6 +35,11 @@ class ClassModel():
         self.I_hat = I_hat
         self.R_hat = np.append(X_hat,I_hat,axis=1)
 
+        self.n_samples = self.X_hat.shape[0]
+        self.n_c = self.X_hat.shape[1]
+        self.n_r = self.R_hat.shape[1]
+        self.n_s = self.I_hat.shape[1]
+
     def boxcar(self,X,I):
         # windows
         win_c = self.D_c_u - self.D_c_l + 1
@@ -96,6 +101,11 @@ class ClassModel():
         self.I_hat = np.append(self.I_hat,I_hat, axis=0)
         self.R_hat = np.append(self.R_hat, R_hat, axis=0)
 
+        self.n_samples = self.X_hat.shape[0]
+        self.n_c = self.X_hat.shape[1]
+        self.n_r = self.R_hat.shape[1]
+        self.n_s = self.I_hat.shape[1]
+
     def MAP_likelihood(self,X_c, R_c, theta, kappa):
 
         nabla = np.dot(R_c, theta)
@@ -131,7 +141,7 @@ class ClassModel():
 
         #build initialization
         if theta_ini is None:
-            theta_ini = np.random.uniform(0.001, 0.01, self.R_hat.shape[1]+1)
+            theta_ini = np.random.uniform(-0.01, 0.01, self.R_hat.shape[1]+1)
         theta_ini_local = theta_ini[PA_c_with_bias]
 
 
@@ -281,7 +291,22 @@ class ClassModel():
         L_c, dL_c, dL2_c = logexplambda(nabla_c)
         I_c = logexp_observed_fisher_info(c, L_c, dL_c, dL2_c)
 
+    def elasticForwardSelection(self, c):
 
+        #initialize set of active regressors to empty set
+        PA_c = np.zeros([self.n_r]).astype('bool')
+        theta = None
+        split_indexes=None
+
+        while True:
+            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, PA_c, theta_ini=theta, index_samples=split_indexes)
+
+
+
+
+
+            if cond:
+                break
 
 
 
