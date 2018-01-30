@@ -223,14 +223,14 @@ class ClassModel():
         nabla = np.dot(R_hat, theta)
         return nabla
 
-    def logexplambda(self, nabla):
+    def logexpLambda(self, nabla):
         L = np.logaddexp(0, nabla * self.kappa) / self.kappa
         dL = 1 - (1 / (1 + np.exp(nabla * self.kappa)))
         # dL2 = (self.k/(1 + np.exp(nabla * self.k)))*(1 - (1/(1 + np.exp(nabla * self.k))))
         dL2 = (self.kappa / (1 + np.exp(nabla * self.kappa))) * dL
         return L, dL, dL2
 
-    def logexp_observed_fisher_info(self, c, PA_c, L, dL, dL2):
+    def logexpObservedFisherInfo(self, c, PA_c, L, dL, dL2):
         # Load regressors and spikes of neuron c
         R_hat = np.array(self.R_hat)
         R_hat = R_hat[:,PA_c]
@@ -245,7 +245,7 @@ class ClassModel():
         I = np.dot(I, R_hat)
         return -I
 
-    def evaluateregressors(self, c, PA_c, theta_ini=None, index_samples=None):
+    def evaluateRegressors(self, c, PA_c, theta_ini=None, index_samples=None):
 
         # number of possible regressors
         nr = PA_c.shape[0]
@@ -293,10 +293,10 @@ class ClassModel():
         H_c = theta_full_c[nc:-1]
         b_c = theta_full_c[-1:]
         nabla_c = self.nabla(W_c, H_c, b_c)
-        L_c, dL_c, dL2_c = self.logexplambda(nabla_c)
+        L_c, dL_c, dL2_c = self.logexpLambda(nabla_c)
 
         # Hessian of considered Parents
-        H_c = self.logexp_observed_fisher_info(c,PAc_ef, L_c, dL_c, dL2_c)
+        H_c = self.logexpObservedFisherInfo(c,PAc_ef, L_c, dL_c, dL2_c)
         I_c = np.linalg.pinv(H_c)
         var_c = np.diagonal(I_c)
 
