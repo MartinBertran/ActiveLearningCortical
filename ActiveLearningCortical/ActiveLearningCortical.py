@@ -299,7 +299,8 @@ class ClassModel():
         H_c = self.logexp_observed_fisher_info(c,PAc_ef, L_c, dL_c, dL2_c)
         I_c = np.linalg.pinv(H_c)
         var_c = np.diagonal(I_c)
-        p_vals_c = scipy.stats.chi2.sf((np.concatenate([theta_full_c[PAc_ef],theta_full_c[-1:]],axis = 0) ** 2) / var_c, df=1)
+
+        p_vals_c = scipy.stats.chi2.sf((theta_full_c[np.append(PAc_ef,True)] ** 2)/var_c, df=1)
 
         # Save in full variance vector
         var_full_c = np.zeros([nr])
