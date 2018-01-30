@@ -304,14 +304,18 @@ class ClassModel():
         # Save in full variance vector
         var_full_c = np.zeros([nr])
         var_full_c[:] = np.inf
+        print(var_full_c.shape)
+        print(var_c.shape)
+        print(PAc_ef.shape)
         if nr_ef > 0:
-            var_full_c[PAc_ef] = var_c[:-1]
+            var_full_c[PAc_ef] = var_c[0:-1]
+            print(var_full_c[PAc_ef].shape)
         var_full_c = np.concatenate([var_full_c,var_c[-1:]],axis = 0)  #bias
 
         # Save in full p_vals vector
         p_vals_full_c = np.ones([nr])
         if nr_ef > 0:
-            p_vals_full_c[PAc_ef] = p_vals_c[:-1]
+            p_vals_full_c[PAc_ef] = p_vals_c[0:-1]
         p_vals_full_c = np.concatenate([p_vals_full_c,p_vals_c[-1:]],axis = 0)  #bias
 
         #Get BIC + Likelihood :)
