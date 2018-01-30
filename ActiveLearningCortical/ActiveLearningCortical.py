@@ -281,10 +281,10 @@ class ClassModel():
         theta_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
 
         # Save in full theta vector
-        theta_full_c = np.zeros([self.R_hat.shape[1] + 1])
+        theta_full_c = np.zeros([nr])
         if nr_ef > 0:
             theta_full_c[PAc_ef] = theta_c[0:-1]
-        theta_full_c[-1:] = theta_c[-1:]  # bias
+        theta_full_c = np.concatenate([theta_full_c,theta_c[-1:]],axis = 0) # bias
 
         ## FISHER ##
         # Build nabla
@@ -302,17 +302,17 @@ class ClassModel():
         p_vals_c = scipy.stats.chi2.sf((theta_c ** 2) / var_c, df=1)
 
         # Save in full variance vector
-        var_full_c = np.zeros([nr+1])
+        var_full_c = np.zeros([nr])
         var_full_c[:] = np.inf
         if nr_ef > 0:
             var_full_c[PAc_ef] = var_c[:-1]
-        var_full_c[-1:] = var_c[-1:] #bias
+        var_full_c = np.concatenate([var_full_c,var_c[-1:]],axis = 0)  #bias
 
         # Save in full p_vals vector
-        p_vals_full_c = np.ones([nr+1])
+        p_vals_full_c = np.ones([nr])
         if nr_ef > 0:
             p_vals_full_c[PAc_ef] = p_vals_c[:-1]
-        p_vals_full_c[-1:] = p_vals_c[-1:]
+        p_vals_full_c = np.concatenate([p_vals_full_c,p_vals_c[-1:]],axis = 0)  #bias
 
         #Get BIC + Likelihood :)
         L_c = -1*self.MAP_likelihood(X_c, np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1), theta_full_c, self.kappa)
