@@ -291,7 +291,7 @@ class ClassModel():
         W_c = theta_full_c[0:nc]
         H_c = theta_full_c[nc:-1]
         b_c = theta_full_c[-1:]
-        nabla_c = nabla(W_c, H_c, b_c)
+        nabla_c = self.nabla(W_c, H_c, b_c)
         L_c, dL_c, dL2_c = self.logexplambda(nabla_c)
 
         # Hessian of considered Parents
