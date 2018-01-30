@@ -107,7 +107,7 @@ class ClassModel():
         self.n_r = self.R_hat.shape[1]
         self.n_s = self.I_hat.shape[1]
 
-    def MAP_likelihood(self,X_c, R_c, theta, kappa):
+    def mapLikelihood(self,X_c, R_c, theta, kappa):
 
         nabla = np.dot(R_c, theta)
         p_lambda = np.logaddexp(0, kappa * nabla) / kappa + 1e-20
@@ -115,7 +115,7 @@ class ClassModel():
         likelihood = np.sum(likelihood)
         return -likelihood
 
-    def grad_MAP_likelihood(self,X_c, R_c, theta, kappa):
+    def gradMapLikelihood(self,X_c, R_c, theta, kappa):
 
         nabla = np.dot(R_c, theta)
         p_lambda = np.logaddexp(0, kappa * nabla) / kappa + 1e-20
@@ -126,7 +126,7 @@ class ClassModel():
         d_lambda_d_theta = np.sum(d_lambda_d_theta, axis=0)
         return -d_lambda_d_theta
 
-    def computeMAP(self, c, PA_c,theta_ini=None, index_mask=None):
+    def computeMap(self, c, PA_c,theta_ini=None, index_mask=None):
 
         #build regressors, intial values, and select target variable
         if index_mask is None:
@@ -148,8 +148,8 @@ class ClassModel():
 
 
         # Minimization
-        f = lambda theta: self.MAP_likelihood(X_c,R_c, theta, self.kappa)
-        df = lambda theta: self.grad_MAP_likelihood(X_c,R_c, theta, self.kappa)
+        f = lambda theta: self.mapLikelihood(X_c,R_c, theta, self.kappa)
+        df = lambda theta: self.gradMapLikelihood(X_c,R_c, theta, self.kappa)
 
 
         options = {}
@@ -278,7 +278,7 @@ class ClassModel():
         PAc_ef = PAc_ef.astype('bool')
 
         # Compute MAP
-        theta_full_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
+        theta_full_c = self.computeMap(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
 
         # Save in full theta vector
         # theta_full_c = np.zeros([nr])
@@ -316,7 +316,7 @@ class ClassModel():
         p_vals_full_c = np.concatenate([p_vals_full_c,p_vals_c[-1:]],axis = 0)  #bias
 
         #Get BIC + Likelihood :)
-        L_c = -1*self.MAP_likelihood(X_c, np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1), theta_full_c, self.kappa)
+        L_c = -1*self.mapLikelihood(X_c, np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1), theta_full_c, self.kappa)
         BIC_c = np.log(R_hat.shape[0])*(np.sum(PA_c == True)+1) - 2*L_c
         return theta_full_c,p_vals_full_c,var_full_c,L_c,BIC_c
 
