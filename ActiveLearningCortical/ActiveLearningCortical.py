@@ -240,7 +240,7 @@ class ClassModel():
             R_hat = np.ones([R_hat.shape[0], 1])
         X_c = np.array(self.X[:, c])
         # Build Hessian
-        diag_values = -X_c * ((dL / L) ** 2) + ((X_c / L) - 1) * dL2
+        diag_values = -X_c * ((dL / (L+1e-20)) ** 2) + ((X_c / (L+1e-20)) - 1) * dL2
         I = R_hat.transpose() * diag_values[np.newaxis, :]
         I = np.dot(I, R_hat)
         return -I
