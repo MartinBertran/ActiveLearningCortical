@@ -229,10 +229,14 @@ class ClassModel():
         dL2 = (self.kappa / (1 + np.exp(nabla * self.kappa))) * dL
         return L, dL, dL2
 
-    def logexp_observed_fisher_info(self, c, L, dL, dL2):
+    def logexp_observed_fisher_info(self, c, PA_c, L, dL, dL2):
         # Load regressors and spikes of neuron c
         R_hat = np.array(self.R_hat)
-        R_hat = np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1)
+        R_hat = R_hat[:,PA_c]
+        if R_hat.shape[1]>0:
+            R_hat = np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1)
+        else:
+            R_hat = np.ones([R_hat.shape[0], 1])
         X_c = np.array(self.X[:, c])
         # Build Hessian
         diag_values = -X_c * ((dL / L) ** 2) + ((X_c / L) - 1) * dL2
@@ -242,12 +246,11 @@ class ClassModel():
 
     def evaluateregressors(self, c, PA_c, theta_ini=None, index_samples=None):
 
-        # number of regressors
+        # number of possible regressors
         nr = PA_c.shape[0]
 
         # Regressors
         R_hat = np.array(self.R_hat)
-        R_hat = R_hat[:, PA_c]
 
         # Neuron to model
         X_c = np.array(self.X[:, c])
@@ -256,40 +259,87 @@ class ClassModel():
             R_hat = R_hat[index_samples, :]
             X_c = X_c[index_samples, :]
 
-        # Check that all regressors are acceptables -.-
-        mask_R = zeros(R_hat.shape)
+        ## Check that all regressors are acceptables - remove ill cases ##
+
+        mask_R = np.zeros(R_hat.shape)
         mask_R[R_hat != 0] = 1
-        mask_Xc = np.tile(X_c, (nr, 1)).transpose()
+        mask_Xc = np.tile(X_c, (R_hat.shape[1], 1)).transpose()
         mask_Xc[mask_Xc != 0] = 1
-        index_clean = np.sum(mask_R, axis=0) * np.sum(mask_R * mask_Xc, axis=0)
-        index_clean[index_clean > 0] = 1
+        index_PA_c = np.sum(mask_R, axis=0) * np.sum(mask_R * mask_Xc, axis=0)
+
+        index_clean = np.zeros(PA_c.shape)
+        index_clean[(index_PA_c > 0) & PA_c] = 1
         nr_ef = np.sum(index_clean > 0)
 
         # Effective PAc
         PAc_ef = np.zeros(PA_c.shape)
-        PAc_ef[PA_c[index_clean > 0]] = 1
-
-        # Effective regressors
-        R_hat = R_hat[:, index_clean > 0]
+        PAc_ef[index_clean > 0] = 1
+        PAc_ef = PAc_ef.astype('bool')
 
         # Compute MAP
-        theta_c = computeMAP(c, PAc_ef, theta_ini=theta_ini, index_samples=index_samples)
+        theta_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_samples=index_samples)
 
-        # Load MAP results on full regressors theta vector
-        theta_full_c = np.zeros([self.R_hat.shape[0] + 1])
+        # Save in full theta vector
+        theta_full_c = np.zeros([self.R_hat.shape[1] + 1])
         if nr_ef > 0:
             theta_full_c[PAc_ef] = theta_c[0:-1]
         theta_full_c[-1:] = theta_c[-1:]  # bias
 
-        # Fisher
+        ## FISHER ##
         # Build nabla
         nc = self.X_hat.shape[1]
         W_c = theta_full_c[0:nc]
         H_c = theta_full_c[nc:-1]
         b_c = theta_full_c[-1:]
         nabla_c = nabla(W_c, H_c, b_c)
-        L_c, dL_c, dL2_c = logexplambda(nabla_c)
-        I_c = logexp_observed_fisher_info(c, L_c, dL_c, dL2_c)
+        L_c, dL_c, dL2_c = self.logexplambda(nabla_c)
+
+        # Hessian of considered Parents
+        H_c = self.logexp_observed_fisher_info(c,PAc_ef, L_c, dL_c, dL2_c)
+        I_c = np.linalg.pinv(H_c)
+        var_c = np.diagonal(I_c)
+        p_vals_c = scipy.stats.chi2.sf((theta_c ** 2) / var_c, df=1)
+
+        # Save in full variance vector
+        var_full_c = np.zeros([nr+1])
+        var_full_c[:] = np.inf
+        if nr_ef > 0:
+            var_full_c[PAc_ef] = var_c[:-1]
+        var_full_c[-1:] = var_c[-1:] #bias
+
+        # Save in full p_vals vector
+        p_vals_full_c = np.ones([nr+1])
+        if nr_ef > 0:
+            p_vals_full_c[PAc_ef] = p_vals_c[:-1]
+        p_vals_full_c[-1:] = p_vals_c[-1:]
+
+        #Get BIC + Likelihood :)
+        L_c = -1*self.MAP_likelihood(X_c, np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1), theta_full_c, self.kappa)
+        BIC_c = np.log(index_samples.shape[0])*(np.sum(PA_c == True)+1) - 2*L_c
+        return theta_full_c,p_vals_full_c,var_full_c,L_c,BIC_c
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def elasticForwardSelection(self, c):
 
