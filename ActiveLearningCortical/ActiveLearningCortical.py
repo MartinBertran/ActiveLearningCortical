@@ -304,12 +304,8 @@ class ClassModel():
         # Save in full variance vector
         var_full_c = np.zeros([nr])
         var_full_c[:] = np.inf
-        print(var_full_c.shape)
-        print(var_c.shape)
-        print(PAc_ef.shape)
         if nr_ef > 0:
             var_full_c[PAc_ef] = var_c[0:-1]
-            print(var_full_c[PAc_ef].shape)
         var_full_c = np.concatenate([var_full_c,var_c[-1:]],axis = 0)  #bias
 
         # Save in full p_vals vector
