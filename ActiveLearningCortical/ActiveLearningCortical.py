@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import minimize
-import scipy
+import scipy as scipy
 
 
 class ClassModel():
