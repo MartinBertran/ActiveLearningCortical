@@ -316,7 +316,7 @@ class ClassModel():
 
         #Get BIC + Likelihood :)
         L_c = -1*self.MAP_likelihood(X_c, np.concatenate([R_hat, np.ones([R_hat.shape[0], 1])], axis=1), theta_full_c, self.kappa)
-        BIC_c = np.log(index_samples.shape[0])*(np.sum(PA_c == True)+1) - 2*L_c
+        BIC_c = np.log(R_hat.shape[0])*(np.sum(PA_c == True)+1) - 2*L_c
         return theta_full_c,p_vals_full_c,var_full_c,L_c,BIC_c
 
 
