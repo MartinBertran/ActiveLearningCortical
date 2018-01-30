@@ -277,7 +277,7 @@ class ClassModel():
         PAc_ef = PAc_ef.astype('bool')
 
         # Compute MAP
-        theta_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_samples=index_samples)
+        theta_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
 
         # Save in full theta vector
         theta_full_c = np.zeros([self.R_hat.shape[1] + 1])
