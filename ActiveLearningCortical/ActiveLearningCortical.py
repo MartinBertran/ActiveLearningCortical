@@ -278,13 +278,13 @@ class ClassModel():
         PAc_ef = PAc_ef.astype('bool')
 
         # Compute MAP
-        theta_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
+        theta_full_c = self.computeMAP(c, PAc_ef, theta_ini=theta_ini, index_mask=index_samples)
 
         # Save in full theta vector
-        theta_full_c = np.zeros([nr])
-        if nr_ef > 0:
-            theta_full_c[PAc_ef] = theta_c[0:-1]
-        theta_full_c = np.concatenate([theta_full_c,theta_c[-1:]],axis = 0) # bias
+        # theta_full_c = np.zeros([nr])
+        # if nr_ef > 0:
+        #     theta_full_c[PAc_ef] = theta_c[0:-1]
+        # theta_full_c = np.concatenate([theta_full_c,theta_c[-1:]],axis = 0) # bias
 
         ## FISHER ##
         # Build nabla
