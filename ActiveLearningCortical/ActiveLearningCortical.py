@@ -256,10 +256,11 @@ class ClassModel():
         # Neuron to model
         X_c = np.array(self.X[:, c])
 
-        print(index_samples.shape)
-        print(R_hat.shape)
-        print(X_c.shape)
         if index_samples is not None:
+            print(index_samples.shape)
+            print(R_hat.shape)
+            print(X_c.shape)
+
             R_hat = R_hat[index_samples, :]
             X_c = X_c[index_samples, :]
 
