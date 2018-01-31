@@ -137,6 +137,7 @@ class ClassModel():
             X_c = self.X[index_mask, c]
 
         #append bias vector
+        print(R_c.shape)
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
         PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
 
