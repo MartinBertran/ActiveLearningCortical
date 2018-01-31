@@ -188,8 +188,6 @@ class ClassModel():
             for split in np.arange(self.n_splits):
                 split_idx = index_masks[split,:]
 
-                print(split_idx.shape)
-                print(self.R_hat.shape)
                 BIC, Likelihood, pval, theta_map, fisher = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
 
                 BIC_split[split,j] = BIC
@@ -258,6 +256,9 @@ class ClassModel():
         # Neuron to model
         X_c = np.array(self.X[:, c])
 
+        print(index_samples.shape)
+        print(R_hat.shape)
+        print(X_c.shape)
         if index_samples is not None:
             R_hat = R_hat[index_samples, :]
             X_c = X_c[index_samples, :]
