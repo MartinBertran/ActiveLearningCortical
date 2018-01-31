@@ -320,29 +320,6 @@ class ClassModel():
         BIC_c = np.log(R_hat.shape[0])*(np.sum(PA_c == True)+1) - 2*L_c
         return theta_full_c,p_vals_full_c,var_full_c,L_c,BIC_c
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     def elasticForwardSelection(self, c):
 
         #initialize set of active regressors to empty set
