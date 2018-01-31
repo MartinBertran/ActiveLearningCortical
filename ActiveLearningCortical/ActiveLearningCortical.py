@@ -129,12 +129,11 @@ class ClassModel():
     def computeMap(self, c, PA_c,theta_ini=None, index_mask=None):
 
         #build regressors, intial values, and select target variable
-        if index_mask is None:
-            R_c = self.R_hat[:,PA_c]
-            X_c = self.X[:,c]
-        else:
-            R_c = self.R_hat[index_mask,PA_c]
-            X_c = self.X[index_mask, c]
+        R_c = self.R_hat[:, PA_c]
+        X_c = self.X[:, c]
+        if index_mask is not None:
+            R_c = R_c[index_mask,:]
+            X_c = X_c[index_mask]
 
         #append bias vector
         print(R_c.shape)
@@ -342,7 +341,7 @@ class ClassModel():
             theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
             best_candidates = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
 
-            print(best_candidates)
+            print("best candidates elastic forward selection",best_candidates)
 
             if len(best_candidates)==0:
                 self.theta =theta
@@ -354,7 +353,7 @@ class ClassModel():
             while True:
                 r_ddag = np.array(r_best)
                 r_ddag[best_candidates[:n]]=True
-                print(r_best.sum(), r_ddag.sum())
+                print("best and candidate regressor sum, elastic forward",r_best.sum(), r_ddag.sum())
 
                 #evaluate new regressor set
                 theta_ddag, likelihood_ddag, fisherInformation_ddag, pvals_ddag, BIC_ddag = self.evaluateRegressors(
