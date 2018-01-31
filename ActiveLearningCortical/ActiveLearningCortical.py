@@ -164,11 +164,11 @@ class ClassModel():
         theta_MAP[PA_c_with_bias] = theta_MAP_local
         return theta_MAP
 
-    def forwardModelProposal(self,c,PA_c, split_indexes):
+    def forwardModelProposal(self,c,PA_c, index_masks):
         '''
         :param c:
         :param PA_c:
-        :param split_indexes: n_splits x total_samples boolean masks of each spliting subset
+        :param index_masks: n_splits x total_samples boolean masks of each spliting subset
         :return:
         '''
 
@@ -186,7 +186,7 @@ class ClassModel():
 
             # evaluate results for every split
             for split in np.arange(self.n_splits):
-                split_idx = split_indexes[split,:]
+                split_idx = index_masks[split,:]
 
                 BIC, Likelihood, pval, theta_map, fisher = self.evaluateRegressors(c, PA_c_r,index_mask=split_idx)
 
@@ -326,16 +326,20 @@ class ClassModel():
         r_prime = np.zeros([self.n_r]).astype('bool')
         theta = None
 
-        #make split_indexes once
+        #make index_masks once
         split_samples = int(self.n_samples*self.nu)
-        split_indexes = np.zeros([self.n_splits,split_samples])
+        index_masks = np.zeros([self.n_splits, self.n_samples], dtype=np.bool)
         for j in np.arange(self.n_splits):
-            split_indexes[j,:] = np.random.choice(np.arange(self.n_samples),split_samples, replace=False)
+            aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
+            index_masks[j,aux]=True
+
+        index_masks = np.zeros([self.n_splits,self.n_samples], dtype=np.bool)
+
 
         while True:
 
-            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=split_indexes)
-            best_candidates = self.forwardModelProposal(self,c,r_prime, split_indexes)
+            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
+            best_candidates = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
 
             print(best_candidates)
 
@@ -354,7 +358,7 @@ class ClassModel():
                 #evaluate new regressor set
                 theta_ddag, likelihood_ddag, fisherInformation_ddag, pvals_ddag, BIC_ddag = self.evaluateRegressors(
                                         c, r_ddag, theta_ini=theta,
-                                        index_samples=split_indexes)
+                                        index_samples=None)
 
                 if (np.max(pvals_ddag)<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
                     r_best = r_ddag
