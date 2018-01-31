@@ -257,12 +257,8 @@ class ClassModel():
         X_c = np.array(self.X[:, c])
 
         if index_samples is not None:
-            print(index_samples.shape)
-            print(R_hat.shape)
-            print(X_c.shape)
-
             R_hat = R_hat[index_samples, :]
-            X_c = X_c[index_samples, :]
+            X_c = X_c[index_samples]
 
         ## Check that all regressors are acceptables - remove ill cases ##
 
