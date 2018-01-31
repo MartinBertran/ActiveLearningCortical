@@ -172,10 +172,10 @@ class ClassModel():
         :return:
         '''
 
-        BIC_split = np.inf([self.n_splits, self.R_hat.shape[1]])
+        BIC_split = np.full([self.n_splits, self.R_hat.shape[1]], np.inf)
         pval_split = np.ones([self.n_splits, self.R_hat.shape[1]])
 
-        BIC_full = np.inf([self.R_hat.shape[1]])
+        BIC_full = np.full([self.R_hat.shape[1]],np.inf)
         pval_full = np.ones([self.R_hat.shape[1]])
 
 
