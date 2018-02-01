@@ -182,22 +182,24 @@ class ClassModel():
         for j in np.where(PA_c==False)[0]:
             PA_c_r = np.array(PA_c)
             PA_c_r[j] = True
+            PA_c_r_with_bias = np.append(PA_c_r,[True]).astype('bool')
 
             # evaluate results for every split
             for split in np.arange(self.n_splits):
                 split_idx = index_masks[split,:]
 
-                theta_map, pval, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
+                theta_map, pvals, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
+                max_pval = np.max(pvals[PA_c_r_with_bias])
+
 
                 BIC_split[split,j] = BIC
-                pval_split[split,j] = pval
+                pval_split[split,j] = max_pval
 
             # evaluate results over full dataset
-            theta_map, pval, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r, index_samples=None)
-
-
+            theta_map, pvals, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r, index_samples=None)
+            max_pval = np.max(pvals[PA_c_r_with_bias])
             BIC_full[j]=BIC
-            pval_full[j]=pval
+            pval_full[j]=max_pval
 
         #Finally, compute score
 
