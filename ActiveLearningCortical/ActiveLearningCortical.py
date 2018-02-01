@@ -212,7 +212,7 @@ class ClassModel():
 
         best_candidates = index_satisfactory[sorted_remainder]
 
-        return best_candidates
+        return best_candidates, pval_score, BIC_score
 
     def nabla(self, W, H, b):
         R_hat = np.array(self.R_hat)
@@ -337,7 +337,7 @@ class ClassModel():
             print('starting primary loop')
 
             theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
-            best_candidates = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
+            best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
 
             print("best candidates elastic forward selection",best_candidates)
 
