@@ -363,11 +363,17 @@ class ClassModel():
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
+                print('r_best :: ', r_best)
+                print('PVALS :: ' , pvals_ddag[r_ddag_with_bias])
+                print('BIC :: ', BIC_ddag)
+
                 if (np.max(pvals_ddag[r_ddag_with_bias])<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
+                    print('We found a better regressor set')
                     r_best = r_ddag
                     BIC_best = BIC_ddag
 
                 if (BIC_ddag>= BIC_best) and (r_best!= r_prime): #Already got a better set in the descending sequence, update and exit loop
+                    print('Already got a better set in the descending sequence, update and exit loop')
                     r_prime = r_best
                     break
 
