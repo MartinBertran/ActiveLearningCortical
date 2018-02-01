@@ -354,7 +354,7 @@ class ClassModel():
             while True:
                 r_ddag = np.array(r_best)
                 r_ddag[best_candidates[:n]]=True
-                print("best and candidate regressor sum, elastic forward",r_best.sum(), r_ddag.sum())
+                print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
 
                 #evaluate new regressor set
                 theta_ddag, pvals_ddag, fisherInformation_ddag, likelihood_ddag, BIC_ddag = self.evaluateRegressors(
@@ -370,6 +370,9 @@ class ClassModel():
                     break
 
                 n -=1
+                if n==0:
+                    print("tried all candidates and none was satisfactory")
+                    break
 
 
 
