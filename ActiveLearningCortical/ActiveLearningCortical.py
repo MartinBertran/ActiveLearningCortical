@@ -374,7 +374,7 @@ class ClassModel():
                     print('r_best_new :: ', r_best)
                     print('BIC_best_new :: ', BIC_best)
 
-                if (BIC_ddag>= BIC_best) and (r_best != r_prime): #Already got a better set in the descending sequence, update and exit loop
+                if (BIC_ddag>= BIC_best) and not((r_best == r_prime).all()): #Already got a better set in the descending sequence, update and exit loop
                     r_prime = r_best
                     print('Already got a better set in the descending sequence, update and exit loop')
                     break
