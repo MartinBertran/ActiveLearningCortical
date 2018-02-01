@@ -144,6 +144,9 @@ class ClassModel():
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
         PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
 
+        print("RC and XC shapes")
+        print(R_c.shape, X_c.shape)
+
         #build initialization
         if theta_ini is None:
             theta_ini = np.random.uniform(-0.01, 0.01, self.R_hat.shape[1]+1)
