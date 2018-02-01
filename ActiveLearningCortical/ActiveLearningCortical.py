@@ -131,12 +131,16 @@ class ClassModel():
         #build regressors, intial values, and select target variable
         R_c = self.R_hat[:, PA_c]
         X_c = self.X[:, c]
+
+        print("RC and XC shapes")
+        print(R_c.shape, X_c.shape)
         if index_mask is not None:
+            print('index mask shape', index_mask.shape)
             R_c = R_c[index_mask,:]
             X_c = X_c[index_mask]
-
+        print("RC and XC shapes")
+        print(R_c.shape, X_c.shape)
         #append bias vector
-        print(R_c.shape)
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
         PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
 
