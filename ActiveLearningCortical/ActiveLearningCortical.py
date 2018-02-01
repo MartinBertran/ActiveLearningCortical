@@ -187,13 +187,14 @@ class ClassModel():
             for split in np.arange(self.n_splits):
                 split_idx = index_masks[split,:]
 
-                theta_map, Likelihood, fisher, pval, BIC = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
+                theta_map, pval, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
 
                 BIC_split[split,j] = BIC
                 pval_split[split,j] = pval
 
             # evaluate results over full dataset
-            theta_map, Likelihood, fisher, pval, BIC = self.evaluateRegressors(c, PA_c_r, index_samples=None)
+            theta_map, pval, fisher, Likelihood, BIC = self.evaluateRegressors(c, PA_c_r, index_samples=None)
+
 
             BIC_full[j]=BIC
             pval_full[j]=pval
@@ -336,7 +337,7 @@ class ClassModel():
         while True:
             print('starting primary loop')
 
-            theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
+            theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
             best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
 
             print("best candidates elastic forward selection",best_candidates)
@@ -354,7 +355,7 @@ class ClassModel():
                 print("best and candidate regressor sum, elastic forward",r_best.sum(), r_ddag.sum())
 
                 #evaluate new regressor set
-                theta_ddag, likelihood_ddag, fisherInformation_ddag, pvals_ddag, BIC_ddag = self.evaluateRegressors(
+                theta_ddag, pvals_ddag, fisherInformation_ddag, likelihood_ddag, BIC_ddag = self.evaluateRegressors(
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
