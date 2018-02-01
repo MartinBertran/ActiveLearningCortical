@@ -373,8 +373,8 @@ class ClassModel():
                     BIC_best = BIC_ddag
 
                 if (BIC_ddag>= BIC_best) and (r_best!= r_prime): #Already got a better set in the descending sequence, update and exit loop
-                    print('Already got a better set in the descending sequence, update and exit loop')
                     r_prime = r_best
+                    print('Already got a better set in the descending sequence, update and exit loop')
                     break
 
                 n -=1
