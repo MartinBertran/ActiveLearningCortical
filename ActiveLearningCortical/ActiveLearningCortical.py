@@ -337,8 +337,6 @@ class ClassModel():
             aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
             index_masks[j,aux]=True
 
-        index_masks = np.zeros([self.n_splits,self.n_samples], dtype=np.bool)
-
 
         while True:
 
