@@ -163,7 +163,7 @@ class ClassModel():
         theta_MAP[PA_c_with_bias] = theta_MAP_local
         return theta_MAP
 
-    def forwardModelProposal(self,c,PA_c, index_masks):
+    def forwardModelProposal(self,c,PA_c, index_masks, BIC_base=np.inf):
         '''
         :param c:
         :param PA_c:
@@ -208,7 +208,7 @@ class ClassModel():
 
 
         # get index of regressors that simultaneoulsy satisfy BIC_score < 0 and pval_score < gamma
-        index_satisfactory = np.where(np.logical_and(BIC_score<0,pval_score<self.gamma))[0]
+        index_satisfactory = np.where(np.logical_and(BIC_score<BIC_base,pval_score<self.gamma))[0]
 
         #sort remaining regressors in ascending order of BIC score, and select the first k regressors
         sorted_remainder =  np.argsort(BIC_score[index_satisfactory])[:self.k]
@@ -340,12 +340,12 @@ class ClassModel():
             print('starting primary loop')
 
             theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
-            best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
+            best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks, BIC_base=BIC)
 
             print("best candidates elastic forward selection",best_candidates)
 
             if len(best_candidates)==0:
-                self.theta =theta
+                # self.theta =theta
                 return theta, likelihood, fisherInformation, pvals, BIC
 
             n = len(best_candidates)
