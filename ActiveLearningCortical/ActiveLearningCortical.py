@@ -132,20 +132,12 @@ class ClassModel():
         R_c = self.R_hat[:, PA_c]
         X_c = self.X[:, c]
 
-        print("RC and XC shapes")
-        print(R_c.shape, X_c.shape)
         if index_mask is not None:
-            print('index mask shape', index_mask.shape)
             R_c = R_c[index_mask,:]
             X_c = X_c[index_mask]
-        print("RC and XC shapes")
-        print(R_c.shape, X_c.shape)
         #append bias vector
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
         PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
-
-        print("RC and XC shapes")
-        print(R_c.shape, X_c.shape)
 
         #build initialization
         if theta_ini is None:
@@ -195,13 +187,13 @@ class ClassModel():
             for split in np.arange(self.n_splits):
                 split_idx = index_masks[split,:]
 
-                BIC, Likelihood, pval, theta_map, fisher = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
+                theta_map, Likelihood, fisher, pval, BIC = self.evaluateRegressors(c, PA_c_r,index_samples=split_idx)
 
                 BIC_split[split,j] = BIC
                 pval_split[split,j] = pval
 
             # evaluate results over full dataset
-            BIC, Likelihood, pval, theta_map, fisher = self.evaluateRegressors(c, PA_c_r, index_samples=None)
+            theta_map, Likelihood, fisher, pval, BIC = self.evaluateRegressors(c, PA_c_r, index_samples=None)
 
             BIC_full[j]=BIC
             pval_full[j]=pval
