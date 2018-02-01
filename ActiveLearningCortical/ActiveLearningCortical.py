@@ -205,7 +205,7 @@ class ClassModel():
 
 
         # get index of regressors that simultaneoulsy satisfy BIC_score < 0 and pval_score < gamma
-        index_satisfactory = np.where(BIC_score<0 and pval_score<self.gamma)[0]
+        index_satisfactory = np.where(np.logical_and(BIC_score<0,pval_score<self.gamma))[0]
 
         #sort remaining regressors in ascending order of BIC score, and select the first k regressors
         sorted_remainder =  np.argsort(BIC_score[index_satisfactory])[:self.k]
@@ -334,6 +334,7 @@ class ClassModel():
 
 
         while True:
+            print('starting primary loop')
 
             theta, likelihood, fisherInformation, pvals, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
             best_candidates = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks)
