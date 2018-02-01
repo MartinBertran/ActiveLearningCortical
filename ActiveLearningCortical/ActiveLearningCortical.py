@@ -354,6 +354,8 @@ class ClassModel():
             while True:
                 r_ddag = np.array(r_best)
                 r_ddag[best_candidates[:n]]=True
+                r_ddag_with_bias = np.append(r_ddag,[True]).astype('bool')
+
                 print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
 
                 #evaluate new regressor set
@@ -361,7 +363,7 @@ class ClassModel():
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
-                if (np.max(pvals_ddag)<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
+                if (np.max(pvals_ddag[r_ddag_with_bias])<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
                     r_best = r_ddag
                     BIC_best = BIC_ddag
 
