@@ -168,8 +168,8 @@ class ClassModel():
         options = {}
         options['maxiter'] = 1000
         options['disp'] = False
-        options['tol'] = 1e-14
-        theta_MAP_local = minimize(f, theta_ini_local, jac=df, options=options)
+        # options['tol'] = 1e-14
+        theta_MAP_local = minimize(f, theta_ini_local, jac=df, tol = 1e-14, options=options)
         theta_MAP_local=theta_MAP_local.x
 
         theta_MAP  = np.zeros(theta_ini.shape)
