@@ -86,6 +86,8 @@ setup(
     author_email=EMAIL,
     url=URL,
     packages=find_packages(exclude=('tests',)),
+    package_dir={'activeLearningCortical': 'ActiveLearmingCortical'},
+    package_data={'activeLearningCortical': ['data/*.csv']},
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 

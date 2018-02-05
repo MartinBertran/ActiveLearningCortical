@@ -1,5 +1,8 @@
 import numpy as np
+import os
 
+import pkg_resources
+DATA_PATH = pkg_resources.resource_filename('<package name>', 'data/')
 
 def load_datasets(dataset):
 
@@ -20,9 +23,17 @@ def load_datasets(dataset):
         print('requested dataset does not exist, please choose one of the following datasets:')
         print(dataset_list)
         return
-    spikes = np.genfromtxt('../Datasets/'+dataset + '_spikes.csv', delimiter=",", skip_header=1)
-    stimuli = np.genfromtxt('../Datasets/'+dataset + '_stimuli.csv', delimiter=",", skip_header=1)
-    subset = np.genfromtxt('../Datasets/'+dataset + '_subset.csv', delimiter=",", skip_header=0)
+
+
+    spikes = np.genfromtxt(
+        os.join(DATA_PATH, dataset + '_spikes.csv'),
+        delimiter=",", skip_header=1)
+    stimuli = np.genfromtxt(
+        os.join(DATA_PATH, dataset + '_stimuli.csv'),
+        delimiter=",", skip_header=1)
+    subset = np.genfromtxt(
+        os.join(DATA_PATH, dataset + '_subset.csv'),
+        delimiter=",", skip_header=0)
 
 
     # expanding stimuli into real number of frames (only stimuli onset is stored in csv
