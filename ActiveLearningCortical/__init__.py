@@ -1,1 +1,2 @@
-from .ActiveLearningCortical import *
+from .activeLearningCortical import *
+from .utils import *
