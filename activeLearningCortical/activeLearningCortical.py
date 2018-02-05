@@ -421,20 +421,35 @@ class ClassModel():
             self.BIC_model[:,c] = BIC
             self.likelihood_model[:,c] = likelihood
 
+        #also update the W and H kernels with the trailing time dimension
+        dw = [self.D_c_u, self.D_c_l]
+        dh = [self.D_s_u, self.D_s_l]
+        W_kernel, H_kernel = get_kernels_WH(self.W, self.H, dw, dh)
+
+        self.W_kernel = W_kernel
+        self.H_kernel = H_kernel
+
+
     def getExpectedSpikingRates(self, p, N=2000,duration=4):
 
         #sample stimuli according to p for N samples, all stimulations persist for duration
         ix = np.random.choice(self.n_s, int(N / duration), p=p)
-        sampled_stimuli = np.zeros([int(N / duration) * duration, self.n_s])
+        sampled_I = np.zeros([int(N / duration) * duration, self.n_s])
         duration_kernel = np.ones(duration)
         for i in np.arange(self.n_s):
             ix_i = np.zeros(ix.shape)
             ix_i[ix == i] = 1
-            sampled_stimuli[::duration, i] = ix_i
-            sampled_stimuli[:, i] = np.convolve(sampled_stimuli[:, i], duration_kernel, mode='same')
-        sampled_stimuli = sampled_stimuli[0:-duration,:]
+            sampled_I[::duration, i] = ix_i
+            sampled_I[:, i] = np.convolve(sampled_I[:, i], duration_kernel, mode='same')
+        sampled_I = sampled_I[0:-duration,:]
 
-        # generate_spikes(W, H, b, I, kappa=200, expected=False)
+
+        # generate expected spiking traces
+        expected_X, expected_I = generate_spikes(self.W_kernel, self.H_kernel, self.b, sampled_I, kappa=self.kappa, expected=True)
+
+        # return only the time average of the traces
+
+        return expected_X.mean(0), expected_I.mean(0)
 
         # call function
         #
