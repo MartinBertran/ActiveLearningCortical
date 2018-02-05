@@ -16,7 +16,7 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'activeLearningCortical'
 DESCRIPTION = 'Python implementation of code presented in [cite missing]'
-URL = 'https://github.com/MartinBertran/ActiveLearningCortical'
+URL = 'https://github.com/MartinBertran/activeLearningCortical'
 EMAIL = 'martin.bertran@gmail.com'
 AUTHOR = 'Natalia Martinez, Martin Bertran'
 
