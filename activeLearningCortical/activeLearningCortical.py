@@ -170,7 +170,7 @@ class ClassModel():
         options = {}
         options['maxiter'] = 1000
         options['disp'] = False
-        options['ftol'] = 1e-14
+        options['tol'] = 1e-14
 
         theta_MAP_local = minimize(f, theta_ini_local, jac=df, options=options)
         theta_MAP_local=theta_MAP_local.x
