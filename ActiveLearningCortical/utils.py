@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 import pkg_resources
-DATA_PATH = pkg_resources.resource_filename('<package name>', 'data/')
+DATA_PATH = pkg_resources.resource_filename('activeLearningCortical', 'data/')
 
 def load_datasets(dataset):
 
