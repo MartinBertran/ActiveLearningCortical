@@ -116,51 +116,57 @@ def load_datasets(dataset):
 
     return stimuli, spikes, stimuli_raw, r_disp, phi_disp
 
-def generate_spikes(W_kernel, H_r, b_c, stimuli, kappa=500):
-    W_window = W_kernel.shape[0]
-    H_window = H_r.shape[0]
-    n_samples = stimuli.shape[0] - H_window
-    cells = W_kernel.shape[2]
-    output_i = np.zeros([n_samples + W_window, cells])
-    lambdaout = np.zeros([n_samples + W_window, cells])
-    dlambdaout = np.zeros([n_samples + W_window, cells])
+def generate_spikes(W, H, b, I, kappa=200, expected=False):
+    """
+    This function generates the spike traces (or expected spiking rates) for a given model with parameters W, H and b
+    :param W: inter-neuron connectivity kernel, delays x cells x cells
+    :param H: stimuli response connectivity kernel, delays x n_stimuli x cells
+    :param b: neuron bias for firing rate
+    :param I: input stimulation sequence, samples x n_stimuli
+    :param kappa: kappa parameter in spiking rate (lambda) function
+    :param expected: boolean, if True, function will instead compute the expected spiking rate of the stimulation sequence
+    :return: X, I, a spiking trace for the modeled neurons, and its generating input stimulation sequence
+    """
+    W_window = W.shape[0]
+    H_window = H.shape[0]
+    cells = W.shape[2]
+    n_samples = I.shape[0] - H_window
+    X = np.zeros([n_samples + W_window, cells])
     for i in np.arange(n_samples):
 
-        # STIMULI ANTERIOR
-        i_ant = stimuli[i:H_window + i, :]
-        i_ant = np.tile(i_ant, (cells, 1, 1))
-        i_ant = np.swapaxes(i_ant, 1, 2)
-        i_ant = np.swapaxes(i_ant, 0, 2)
+        # select previous stimuli and retile it into delays x n_s x cells (same shape as H)
+        I_prev = I[i:H_window + i, :]
+        I_prev = np.tile(I_prev, (cells, 1, 1)).transpose(1,2,0)
 
-        factor_input = H_r * i_ant
-        factor_input = np.swapaxes(factor_input, 0, 2)
-        factor_input = np.sum(factor_input, axis=2)
-        factor_input = np.sum(factor_input, axis=1)
+        # compute instantaneous contribution of all inputs across every cell
+        # (sum over delays and stimuli)
+        factor_input = np.sum(H * I_prev, axis=(0,1))
 
-        # Y ANTERIOR
-        y_ant = output_i[i:W_window + i, :]
-        y_ant = np.tile(y_ant, (cells, 1, 1))
-        y_ant = np.swapaxes(y_ant, 1, 2)
-        y_ant = np.swapaxes(y_ant, 0, 2)
+        # select previous spikes and retile it into delays x n_c x cells (same shape as W)
+        X_prev = X[i:W_window + i, :]
+        X_prev = np.tile(X_prev, (cells, 1, 1)).transpose(1,2,0)
 
         # NETWORK TERM#
-        factor_cells = W_kernel * y_ant
-        factor_cells = np.swapaxes(factor_cells, 0, 2)
-        factor_cells = np.sum(factor_cells, axis=2)
-        factor_cells = np.sum(factor_cells, axis=1)
+        factor_cells = np.sum(W * X_prev, axis=(0,1))
 
-        eta = b_c + factor_cells + factor_input
+        eta = b + factor_cells + factor_input
+        L = np.logaddexp(0, kappa * eta) / kappa
 
-        dL = 1 - 1 / (1 + np.exp(kappa * eta))
-        L = np.logaddexp(0, k * eta) / kappa
+        if expected:
+            X[W_window + i, :] = L
+        else:
+            X[W_window + i, :] = np.random.poisson(lam=L)
 
+    X = X[W_window:, :]
+    I = np.array(I[W_window:, :])
+    return X, I
 
-        output_i[W_window + i, :] = np.random.poisson(lam=L)
-        lambdaout[W_window + i, :] = L
-        dlambdaout[W_window + i, :] = dL
+def get_kernels_WH(W, H, dw, dh):
+    size_dw = -1 * dw[1] + dw[0] + 1
+    size_dh = -1 * dh[1] + dh[0] + 1
+    H_kernel = np.zeros([-1 * dh[1] + 1, H.shape[0], H.shape[1]])
+    W_kernel = np.zeros([-1 * dw[1] + 1, W.shape[0], W.shape[1]])
+    H_kernel[-1 * dh[0]:-1 * dh[1] + 1, :, :] = np.tile(H, (size_dh, 1, 1))
+    W_kernel[-1 * dw[0]:-1 * dw[1] + 1, :, :] = np.tile(W, (size_dw, 1, 1))
 
-    output = output_i[W_window:, :]
-    lambdaout = lambdaout[W_window:, :]
-    dlambdaout = dlambdaout[W_window:, :]
-    stimul = np.array(stimuli[W_window:, :])
-    return output, lambdaout, dlambdaout, stimul
+    return W_kernel, H_kernel
