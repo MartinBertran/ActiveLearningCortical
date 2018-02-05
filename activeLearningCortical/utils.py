@@ -27,13 +27,13 @@ def load_datasets(dataset):
 
 
     spikes = np.genfromtxt(
-        os.join(DATA_PATH, dataset + '_spikes.csv'),
+        os.path.join(DATA_PATH, dataset + '_spikes.csv'),
         delimiter=",", skip_header=1)
     stimuli = np.genfromtxt(
-        os.join(DATA_PATH, dataset + '_stimuli.csv'),
+        os.path.join(DATA_PATH, dataset + '_stimuli.csv'),
         delimiter=",", skip_header=1)
     subset = np.genfromtxt(
-        os.join(DATA_PATH, dataset + '_subset.csv'),
+        os.path.join(DATA_PATH, dataset + '_subset.csv'),
         delimiter=",", skip_header=0)
 
 
