@@ -41,6 +41,22 @@ class ClassModel():
         self.n_r = self.R_hat.shape[1]
         self.n_s = self.I_hat.shape[1]
 
+        self.W = np.zeros([self.n_c, self.n_c])
+        self.W_pval = np.zeros([self.n_c, self.n_c])
+        self.W_fisher = np.zeros([self.n_c, self.n_c])
+
+        self.H = np.zeros([self.n_s, self.n_c])
+        self.H_pval = np.zeros([self.n_s, self.n_c])
+        self.H_fisher = np.zeros([self.n_s, self.n_c])
+
+        self.b = np.zeros([1, self.n_c])
+        self.b_pval = np.zeros([1, self.n_c])
+        self.b_fisher = np.zeros([1, self.n_c])
+
+        self.BIC_model = np.zeros([1, self.n_c])
+        self.likelihood_model = np.zeros([1, self.n_c])
+
+
     def boxcar(self,X,I):
         # windows
         win_c = self.D_c_u - self.D_c_l + 1
@@ -383,6 +399,37 @@ class ClassModel():
                 if n==0:
                     print("tried all candidates and none was satisfactory")
                     break
+
+    def updateModel(self):
+
+        for c in np.arange(self.n_c):
+            theta, likelihood, fisherInformation, pvals, BIC = self.elasticForwardSelection(c)
+
+            # W, H, b MLE
+            self.W[:,c] = theta[0:self.n_c]
+            self.H[:,c] = theta[self.n_c:-1]
+            self.b[:,c] = theta[-1:]
+
+            # W, H, b pvals
+            self.W_pval[:,c] = pvals[0:self.n_c]
+            self.H_pval[:,c] = pvals[self.n_c:-1]
+            self.b_pval[:,c] = pvals[-1:]
+
+            # W, H, b fisher info
+            self.W_fisher[:,c] = fisherInformation[0:self.n_c]
+            self.H_fisher[:,c] = fisherInformation[self.n_c:-1]
+            self.b_fisher[:,c] = fisherInformation[-1:]
+
+            #Model Likelihood and BIC
+            self.BIC_model[:,c] = BIC
+            self.likelihood_model[:,c] = likelihood
+
+
+
+
+
+
+
 
 
 
