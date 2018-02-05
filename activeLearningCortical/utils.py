@@ -62,7 +62,7 @@ def load_datasets(dataset):
             return -np.pi/2
 
     n_states = (aux_stimuli.max(0) - aux_stimuli.min(0) + 1).astype('int')
-    min_k = -np.abs(aux_stimuli).max()
+    min_k = -np.abs(aux_stimuli).max(0)
     reparam_stimuli = np.zeros([new_stimuli.shape[0], *n_states])
     RPhi_stimuli = np.zeros([new_stimuli.shape[0], 2])
     for j in range(reparam_stimuli.shape[0]):
