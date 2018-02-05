@@ -351,7 +351,7 @@ class ClassModel():
             aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
             index_masks[j,aux]=True
 
-
+        print('####### Elastic Forward cell : ', c, '  ########')
         while True:
             print('starting primary loop')
 
@@ -379,7 +379,7 @@ class ClassModel():
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
-                print('r_best :: ', r_best)
+                # print('r_best :: ', r_best)
                 print('PVALS :: ' , pvals_ddag[r_ddag_with_bias])
                 print('BIC_best :: ', BIC_best)
 
@@ -387,7 +387,7 @@ class ClassModel():
                     print('We found a better regressor set')
                     r_best = r_ddag
                     BIC_best = BIC_ddag
-                    print('r_best_new :: ', r_best)
+                    # print('r_best_new :: ', r_best)
                     print('BIC_best_new :: ', BIC_best)
 
                 if (BIC_ddag>= BIC_best) and not((r_best == r_prime).all()): #Already got a better set in the descending sequence, update and exit loop
@@ -423,6 +423,7 @@ class ClassModel():
             #Model Likelihood and BIC
             self.BIC_model[:,c] = BIC
             self.likelihood_model[:,c] = likelihood
+
 
 
 
