@@ -151,6 +151,7 @@ class ClassModel():
         if index_mask is not None:
             R_c = R_c[index_mask,:]
             X_c = X_c[index_mask]
+
         #append bias vector
         R_c = np.append(R_c,np.ones([R_c.shape[0],1]),axis=1)
         PA_c_with_bias = np.append(PA_c,[True]).astype('bool')
@@ -160,12 +161,9 @@ class ClassModel():
             theta_ini = np.random.uniform(-0.01, 0.01, self.R_hat.shape[1]+1)
         theta_ini_local = theta_ini[PA_c_with_bias]
 
-
-
         # Minimization
         f = lambda theta: self.mapLikelihood(X_c,R_c, theta, self.kappa)
         df = lambda theta: self.gradMapLikelihood(X_c,R_c, theta, self.kappa)
-
 
         options = {}
         options['maxiter'] = 1000
