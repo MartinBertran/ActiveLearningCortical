@@ -409,10 +409,12 @@ class ClassModel():
             self.W[:,c] = theta[0:self.n_c]
             self.H[:,c] = theta[self.n_c:-1]
             self.b[:,c] = theta[-1:]
+
             # W, H, b pvals
             self.W_pval[:,c] = pvals[0:self.n_c]
             self.H_pval[:,c] = pvals[self.n_c:-1]
             self.b_pval[:,c] = pvals[-1:]
+
             # W, H, b fisher info
             self.W_fisher[:,c] = fisherInformation[0:self.n_c]
             self.H_fisher[:,c] = fisherInformation[self.n_c:-1]
