@@ -2,7 +2,7 @@ import numpy as np
 import os
 
 import pkg_resources
-DATA_PATH = pkg_resources.resource_filename('activeLearningCortical', 'data/')
+
 
 def load_datasets(dataset):
 
@@ -18,6 +18,7 @@ def load_datasets(dataset):
     """
 
     dataset_list=['lt3_000_002','lt3_000_003','lt3_001_003','lt3_001_004','lt3_002_000','lt3_002_001']
+    DATA_PATH = pkg_resources.resource_filename('activeLearningCortical', 'data/')
 
     if dataset not in dataset_list:
         print('requested dataset does not exist, please choose one of the following datasets:')
