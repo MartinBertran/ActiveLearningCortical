@@ -17,7 +17,7 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta):
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
@@ -28,6 +28,7 @@ class ClassModel():
         self.gamma = gamma
         self.nu = nu
         self.n_splits = n_splits
+        self.beta = beta
 
         I_hat, X_hat, X, I = self.boxcar(X,I)
 
@@ -451,6 +452,33 @@ class ClassModel():
 
         return expected_X.mean(0), expected_I.mean(0)
 
-        # call function
-        #
-        # then return the averages
+    def computeStimuliImpact(self):
+
+        #set up variables
+        impact_matrix_X = np.zeros([self.n_s, self.n_c])
+        impact_matrix_I = np.zeros([self.n_s, self.n_s])
+        N=2000
+        duration=4
+
+
+        #get base rates
+        p= np.ones(self.n_s)/self.n_s
+        # p /= p.sum()
+
+        rate_X_base, rate_I_base = self.getExpectedSpikingRates(self, p, N=N, duration=duration)
+
+        #get rates for every stimuli and compute impact ratio
+        for i in np.arange(self.n_s):
+
+            p = np.ones(self.n_s)/self.n_s* self.beta
+            p[i] += (1-self.beta)
+            print(p.sum())
+            rate_X_i, rate_I_i = self.getExpectedSpikingRates(self, p, N=N, duration=duration)
+
+            impact_matrix_X[i,:] = rate_X_i/rate_X_base
+
+            impact_matrix_I[i, :] = rate_I_i / rate_I_base
+
+        print(impact_matrix_X.min(), impact_matrix_I.min())
+
+        return impact_matrix_X, impact_matrix_I
