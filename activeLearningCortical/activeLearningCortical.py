@@ -431,7 +431,6 @@ class ClassModel():
         self.W_kernel = W_kernel
         self.H_kernel = H_kernel
 
-
     def getExpectedSpikingRates(self, p, N=2000,duration=4):
 
         #sample stimuli according to p for N samples, all stimulations persist for duration
@@ -466,7 +465,7 @@ class ClassModel():
         p= np.ones(self.n_s)/self.n_s
         # p /= p.sum()
 
-        rate_X_base, rate_I_base = self.getExpectedSpikingRates(self, p, N=N, duration=duration)
+        rate_X_base, rate_I_base = self.getExpectedSpikingRates(p, N=N, duration=duration)
 
         #get rates for every stimuli and compute impact ratio
         for i in np.arange(self.n_s):
@@ -474,7 +473,7 @@ class ClassModel():
             p = np.ones(self.n_s)/self.n_s* self.beta
             p[i] += (1-self.beta)
             print(p.sum())
-            rate_X_i, rate_I_i = self.getExpectedSpikingRates(self, p, N=N, duration=duration)
+            rate_X_i, rate_I_i = self.getExpectedSpikingRates(p, N=N, duration=duration)
 
             impact_matrix_X[i,:] = rate_X_i/rate_X_base
 
