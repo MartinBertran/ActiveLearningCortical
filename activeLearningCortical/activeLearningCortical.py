@@ -17,7 +17,7 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4):
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
@@ -170,7 +170,8 @@ class ClassModel():
         options['maxiter'] = 1000
         options['disp'] = False
         # options['tol'] = 1e-14
-        theta_MAP_local = minimize(f, theta_ini_local, jac=df, tol = 1e-14, options=options)
+        # theta_MAP_local = minimize(f, theta_ini_local, jac=df, tol = 1e-14, options=options)
+        theta_MAP_local = minimize(f, theta_ini_local, jac=df, options=options)
         theta_MAP_local=theta_MAP_local.x
 
         theta_MAP  = np.zeros(theta_ini.shape)
