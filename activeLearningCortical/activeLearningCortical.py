@@ -530,16 +530,16 @@ class ClassModel():
         #compute stimuli impact over all regressors
         impact_matrix_X, impact_matrix_I = self.computeStimuliImpact()
 
-        #compute raw score over all stimuli
-        impact_matrix = np.append(impact_matrix_X, impact_matrix_I, axis=0)
+        # compute raw score over all stimuli
+        impact_matrix = np.append(impact_matrix_X, impact_matrix_I, axis=1)
         score = np.dot(impact_matrix, likelihood_score)
 
-        #compute truncated z-score of the score vector
-        score_mean =  np.mean(score)
+        # compute truncated z-score of the score vector
+        score_mean = np.mean(score)
         score_std = np.std(score)
-        z_score_truncated = np.maximum(np.minumum((score-score_mean)/score_std,2),-2)
+        z_score_truncated = np.maximum(np.minimum((score - score_mean) / score_std, 2), -2)
 
-        #finally, translate truncated z-scores into a probability distribution using the softmax function
+        # finally, translate truncated z-scores into a probability distribution using the softmax function
         p_AL = np.exp(z_score_truncated)
         p_AL /= p_AL.sum()
 
