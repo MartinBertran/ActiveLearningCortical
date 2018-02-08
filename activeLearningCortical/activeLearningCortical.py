@@ -457,28 +457,68 @@ class ClassModel():
         #set up variables
         impact_matrix_X = np.zeros([self.n_s, self.n_c])
         impact_matrix_I = np.zeros([self.n_s, self.n_s])
-        N=2000
+        N=4000
         duration=4
 
 
         #get base rates
-        p= np.ones(self.n_s)/self.n_s
-        # p /= p.sum()
+        p_base= np.ones(self.n_s)/self.n_s
 
-        rate_X_base, rate_I_base = self.getExpectedSpikingRates(p, N=N, duration=duration)
+        rate_X_base, rate_I_base = self.getExpectedSpikingRates(p_base, N=N, duration=duration)
 
         #get rates for every stimuli and compute impact ratio
         for i in np.arange(self.n_s):
 
             p = np.ones(self.n_s)/self.n_s* self.beta
             p[i] += (1-self.beta)
-            print(p.sum())
             rate_X_i, rate_I_i = self.getExpectedSpikingRates(p, N=N, duration=duration)
 
             impact_matrix_X[i,:] = rate_X_i/rate_X_base
 
-            impact_matrix_I[i, :] = rate_I_i / rate_I_base
-
-        print(impact_matrix_X.min(), impact_matrix_I.min())
+            impact_matrix_I[i, :] = p / p_base
 
         return impact_matrix_X, impact_matrix_I
+
+    def computeLogLikelihoodDifference(self):
+
+        # make index_masks once
+        split_samples = int(self.n_samples * self.nu)
+        index_masks = np.zeros([self.n_splits, self.n_samples], dtype=np.bool)
+        for j in np.arange(self.n_splits):
+            aux = np.random.choice(np.arange(self.n_samples), split_samples, replace=False).astype('int')
+            index_masks[j, aux] = True
+
+        # setting up the variables
+        likelihood_Delta = np.zeros([self.n_c, self.n_r, self.n_splits])
+
+        theta = np.concatenate((np.array(self.W),np.array(self.H),self.b),axis=0)
+        PA = (theta[:-1,:])!=0
+
+        for c in np.arange(self.n_c): #for every target cell
+            # get PA_c, and theta_c initialization
+            theta_c = np.append(self.W[:, c], self.H[:, c], self.b[c])
+            PA_c = PA[:,c]
+            for split in np.arange(self.n_splits): #for every split
+                #do current split and current model
+                current_split = index_masks[split,:]
+                _, _, _, likelihood_base, _ = self.evaluateRegressors( c, PA_c, theta_ini=theta_c, index_samples=current_split)
+
+                for r in np.arange(self.n_r): # for every possible regressor
+                    if PA_c[r]: #if regressor os already included, do nothing
+                        continue
+                    PA_c_plus_r = np.array(PA_c)
+                    PA_c_plus_r[r]=True
+
+                    _, _, _, likelihood_r, _ = self.evaluateRegressors(c, PA_c_plus_r, theta_ini=theta_c,
+                                                                          index_samples=current_split)
+                    likelihood_Delta[c,r,split] = likelihood_r - likelihood_base
+
+        #despues hacer median sobre los splits, y hacer el promedio sobre r aca (solo sobre PA_c en el otro sentido,
+                    #  para eso precisaba el PA )
+
+        likelihood_Delta = np.median(likelihood_Delta,axis=2) # compute median difference over splits
+
+        likelihood_score = np.zeros([self.n_r])
+        for r in np.arange(self.n_r): # compute mean over potential child cells
+            likelihood_score[r] = np.mean(likelihood_Delta[PA[r,:],r])
+        return likelihood_score
