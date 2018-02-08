@@ -498,6 +498,7 @@ class ClassModel():
             # get PA_c, and theta_c initialization
             theta_c = theta[:,c]
             PA_c = PA[:,c]
+            print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
             for split in np.arange(self.n_splits): #for every split
                 #do current split and current model
                 current_split = index_masks[split,:]
@@ -513,12 +514,35 @@ class ClassModel():
                                                                           index_samples=current_split)
                     likelihood_Delta[c,r,split] = likelihood_r - likelihood_base
 
-        #despues hacer median sobre los splits, y hacer el promedio sobre r aca (solo sobre PA_c en el otro sentido,
-                    #  para eso precisaba el PA )
 
         likelihood_Delta = np.median(likelihood_Delta,axis=2) # compute median difference over splits
 
         likelihood_score = np.zeros([self.n_r])
         for r in np.arange(self.n_r): # compute mean over potential child cells
-            likelihood_score[r] = np.mean(likelihood_Delta[PA[r,:],r])
+            likelihood_score[r] = np.mean(likelihood_Delta[np.logical_not(PA[r,:]),r])
         return likelihood_score
+
+    def getActiveLearningDistribution(self):
+
+        #get logLikelihood Difference score over all regressors
+        likelihood_score = self.computeLogLikelihoodDifference()
+
+        #compute stimuli impact over all regressors
+        impact_matrix_X, impact_matrix_I = self.computeStimuliImpact()
+
+        #compute raw score over all stimuli
+        impact_matrix = np.append(impact_matrix_X, impact_matrix_I, axis=0)
+        score = np.dot(impact_matrix, likelihood_score)
+
+        #compute truncated z-score of the score vector
+        score_mean =  np.mean(score)
+        score_std = np.std(score)
+        z_score_truncated = np.maximum(np.minumum((score-score_mean)/score_std,2),-2)
+
+        #finally, translate truncated z-scores into a probability distribution using the softmax function
+        p_AL = np.exp(z_score_truncated)
+        p_AL /= p_AL.sum()
+
+        self.p_AL = p_AL
+
+        return p_AL
