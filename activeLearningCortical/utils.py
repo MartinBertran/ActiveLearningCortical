@@ -171,12 +171,12 @@ def get_kernels_WH(W, H, dw, dh):
 
     return W_kernel, H_kernel
 
-def getSampledStimuli(N, duration, p, n_s):
+def getSampledStimuli(N, duration, p):
     # sample stimuli according to p for N samples, all stimulations persist for duration
-    ix = np.random.choice(n_s, int(N / duration), p=p)
-    sampled_I = np.zeros([int(N / duration) * duration, n_s])
+    ix = np.random.choice(p.size, int(N / duration), p=p)
+    sampled_I = np.zeros([int(N / duration) * duration, p.size])
     duration_kernel = np.ones(duration)
-    for i in np.arange(n_s):
+    for i in np.arange(p.size):
         ix_i = np.zeros(ix.shape)
         ix_i[ix == i] = 1
         sampled_I[::duration, i] = ix_i

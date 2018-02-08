@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.optimize import minimize
-import scipy as scipy
+import scipy
+import scipy.io
 from .utils import *
 
 
@@ -435,7 +436,7 @@ class ClassModel():
 
         #sample stimuli according to p for N samples, all stimulations persist for duration
 
-        sampled_I = getSampledStimuli(N, duration, p, self.n_s)
+        sampled_I = getSampledStimuli(N, duration, p)
 
         # ix = np.random.choice(self.n_s, int(N / duration), p=p)
         # sampled_I = np.zeros([int(N / duration) * duration, self.n_s])
