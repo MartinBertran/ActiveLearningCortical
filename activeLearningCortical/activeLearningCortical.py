@@ -434,15 +434,18 @@ class ClassModel():
     def getExpectedSpikingRates(self, p, N=2000,duration=4):
 
         #sample stimuli according to p for N samples, all stimulations persist for duration
-        ix = np.random.choice(self.n_s, int(N / duration), p=p)
-        sampled_I = np.zeros([int(N / duration) * duration, self.n_s])
-        duration_kernel = np.ones(duration)
-        for i in np.arange(self.n_s):
-            ix_i = np.zeros(ix.shape)
-            ix_i[ix == i] = 1
-            sampled_I[::duration, i] = ix_i
-            sampled_I[:, i] = np.convolve(sampled_I[:, i], duration_kernel, mode='same')
-        sampled_I = sampled_I[0:-duration,:]
+
+        sampled_I = getSampledStimuli(N, duration, p, self.n_s)
+
+        # ix = np.random.choice(self.n_s, int(N / duration), p=p)
+        # sampled_I = np.zeros([int(N / duration) * duration, self.n_s])
+        # duration_kernel = np.ones(duration)
+        # for i in np.arange(self.n_s):
+        #     ix_i = np.zeros(ix.shape)
+        #     ix_i[ix == i] = 1
+        #     sampled_I[::duration, i] = ix_i
+        #     sampled_I[:, i] = np.convolve(sampled_I[:, i], duration_kernel, mode='same')
+        # sampled_I = sampled_I[0:-duration,:]
 
 
         # generate expected spiking traces

@@ -170,3 +170,17 @@ def get_kernels_WH(W, H, dw, dh):
     W_kernel[-1 * dw[0]:-1 * dw[1] + 1, :, :] = np.tile(W, (size_dw, 1, 1))
 
     return W_kernel, H_kernel
+
+def getSampledStimuli(N, duration, p, n_s):
+    # sample stimuli according to p for N samples, all stimulations persist for duration
+    ix = np.random.choice(n_s, int(N / duration), p=p)
+    sampled_I = np.zeros([int(N / duration) * duration, n_s])
+    duration_kernel = np.ones(duration)
+    for i in np.arange(n_s):
+        ix_i = np.zeros(ix.shape)
+        ix_i[ix == i] = 1
+        sampled_I[::duration, i] = ix_i
+        sampled_I[:, i] = np.convolve(sampled_I[:, i], duration_kernel, mode='same')
+    sampled_I = sampled_I[0:-duration, :]
+
+    return sampled_I
