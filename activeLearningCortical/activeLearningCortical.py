@@ -496,7 +496,7 @@ class ClassModel():
 
         for c in np.arange(self.n_c): #for every target cell
             # get PA_c, and theta_c initialization
-            theta_c = np.append(self.W[:, c], self.H[:, c], self.b[c])
+            theta_c = theta[:,c]
             PA_c = PA[:,c]
             for split in np.arange(self.n_splits): #for every split
                 #do current split and current model
