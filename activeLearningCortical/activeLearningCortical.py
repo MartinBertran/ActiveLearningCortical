@@ -2,6 +2,7 @@ import numpy as np
 from scipy.optimize import minimize
 import scipy
 import scipy.io
+import scipy.stats
 from .utils import *
 
 
