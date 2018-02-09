@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 import scipy
 import scipy.io
 import scipy.stats
+import scipy.special
 from .utils import *
 
 
@@ -139,7 +140,8 @@ class ClassModel():
         nabla = np.dot(R_c, theta)
         p_lambda = np.logaddexp(0, kappa * nabla) / kappa + 1e-20
         d_like_d_lambda = (X_c / p_lambda - 1)
-        d_lambda_d_nabla = 1 - (1 / (1 + np.exp(nabla * kappa)))
+        # d_lambda_d_nabla = 1 - (1 / (1 + np.exp(nabla * kappa)))
+        d_lambda_d_nabla = 1 - scipy.special.expit(-nabla*kappa)
         d_nabla_d_theta = R_c
         d_lambda_d_theta = (d_like_d_lambda * d_lambda_d_nabla)[:, np.newaxis] * d_nabla_d_theta
         d_lambda_d_theta = np.sum(d_lambda_d_theta, axis=0)
