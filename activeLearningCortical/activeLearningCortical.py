@@ -356,7 +356,7 @@ class ClassModel():
 
         print('####### Elastic Forward cell : ', c, '  ########')
         while True:
-            print('starting primary loop')
+            # print('starting primary loop')
 
             theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
             best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks, BIC_base=BIC)
@@ -375,7 +375,7 @@ class ClassModel():
                 r_ddag[best_candidates[:n]]=True
                 r_ddag_with_bias = np.append(r_ddag,[True]).astype('bool')
 
-                print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
+                # print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
 
                 #evaluate new regressor set
                 theta_ddag, pvals_ddag, fisherInformation_ddag, likelihood_ddag, BIC_ddag = self.evaluateRegressors(
@@ -384,14 +384,13 @@ class ClassModel():
 
                 # print('r_best :: ', r_best)
                 print('PVALS :: ' , pvals_ddag[r_ddag_with_bias])
-                print('BIC_best :: ', BIC_best)
+                # print('BIC_best :: ', BIC_best)
 
                 if (np.max(pvals_ddag[r_ddag_with_bias])<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
-                    print('We found a better regressor set')
                     r_best = r_ddag
                     BIC_best = BIC_ddag
                     # print('r_best_new :: ', r_best)
-                    print('BIC_best_new :: ', BIC_best)
+                    print('Found a better regressor set with BIC ', BIC_best)
 
                 if (BIC_ddag>= BIC_best) and not((r_best == r_prime).all()): #Already got a better set in the descending sequence, update and exit loop
                     r_prime = r_best
@@ -505,7 +504,7 @@ class ClassModel():
             # get PA_c, and theta_c initialization
             theta_c = theta[:,c]
             PA_c = PA[:,c]
-            print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
+            # print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
             for split in np.arange(self.n_splits): #for every split
                 #do current split and current model
                 current_split = index_masks[split,:]
