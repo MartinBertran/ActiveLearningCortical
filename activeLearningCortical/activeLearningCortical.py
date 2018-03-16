@@ -20,7 +20,9 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False):
+
+        self.verbose = verbose
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
@@ -60,6 +62,11 @@ class ClassModel():
 
         self.BIC_model = np.zeros([1, self.n_c])
         self.likelihood_model = np.zeros([1, self.n_c])
+
+    def verbose_print(self,*args):
+        if self.verbose:
+            print(*args)
+
 
     def boxcar(self,X,I):
         # windows
@@ -354,14 +361,14 @@ class ClassModel():
             aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
             index_masks[j,aux]=True
 
-        print('####### Elastic Forward cell : ', c, '  ########')
+        self.verbose_print('####### Elastic Forward cell : ', c, '  ########')
         while True:
-            # print('starting primary loop')
+            self.verbose_print('starting primary loop')
 
             theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
             best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks, BIC_base=BIC)
 
-            print("best candidates elastic forward selection",best_candidates)
+            self.verbose_print("best candidates elastic forward selection",best_candidates)
 
             if len(best_candidates)==0:
                 # self.theta =theta
@@ -375,31 +382,30 @@ class ClassModel():
                 r_ddag[best_candidates[:n]]=True
                 r_ddag_with_bias = np.append(r_ddag,[True]).astype('bool')
 
-                # print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
+                # self.verbose_print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
 
                 #evaluate new regressor set
                 theta_ddag, pvals_ddag, fisherInformation_ddag, likelihood_ddag, BIC_ddag = self.evaluateRegressors(
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
-                # print('r_best :: ', r_best)
-                print('PVALS :: ' , pvals_ddag[r_ddag_with_bias])
-                # print('BIC_best :: ', BIC_best)
+                # self.verbose_print('r_best: ', r_best)
+                self.verbose_print('PVALS: ' , pvals_ddag[r_ddag_with_bias])
+                # self.verbose_print('BIC_best: ', BIC_best)
 
                 if (np.max(pvals_ddag[r_ddag_with_bias])<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
                     r_best = r_ddag
                     BIC_best = BIC_ddag
-                    # print('r_best_new :: ', r_best)
-                    print('Found a better regressor set with BIC ', BIC_best)
+                    self.verbose_print('Found a better regressor set with BIC ', BIC_best)
 
                 if (BIC_ddag>= BIC_best) and not((r_best == r_prime).all()): #Already got a better set in the descending sequence, update and exit loop
                     r_prime = r_best
-                    print('Already got a better set in the descending sequence, update and exit loop')
+                    self.verbose_print('Already got a better set in the descending sequence, update and exit loop')
                     break
 
                 n -=1
                 if n==0:
-                    print("tried all candidates and none was satisfactory")
+                    self.verbose_print("tried all candidates and none was satisfactory")
                     break
 
     def updateModel(self):
@@ -504,7 +510,7 @@ class ClassModel():
             # get PA_c, and theta_c initialization
             theta_c = theta[:,c]
             PA_c = PA[:,c]
-            # print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
+            # self.verbose_print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
             for split in np.arange(self.n_splits): #for every split
                 #do current split and current model
                 current_split = index_masks[split,:]
