@@ -20,9 +20,10 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False, logfile=None):
 
         self.verbose = verbose
+        self.logfile = logfile
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
@@ -66,6 +67,9 @@ class ClassModel():
     def verbose_print(self,*args):
         if self.verbose:
             print(*args)
+        elif self.logfile is not None:
+            with open(self.logfile, 'w+') as f:
+                print(*args, file=f)
 
 
     def boxcar(self,X,I):
