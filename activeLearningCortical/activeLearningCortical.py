@@ -68,7 +68,7 @@ class ClassModel():
         if self.verbose:
             print(*args)
         elif self.logfile is not None:
-            with open(self.logfile, 'w+') as f:
+            with open(self.logfile, 'a+') as f:
                 print(*args, file=f)
 
 
