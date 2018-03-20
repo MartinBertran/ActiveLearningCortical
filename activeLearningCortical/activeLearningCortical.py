@@ -5,6 +5,8 @@ import scipy.io
 import scipy.stats
 import scipy.special
 from .utils import *
+import logging
+import dill
 
 
 class ClassModel():
@@ -20,10 +22,13 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False, logfile=None):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False, logfile=None, checkpoint=None):
 
         self.verbose = verbose
         self.logfile = logfile
+        if logfile is not None:
+            logging.basicConfig(filename='example.log', level=logging.DEBUG)
+
 
         self.D_c_l = D_c_l
         self.D_c_u = D_c_u
@@ -63,13 +68,18 @@ class ClassModel():
 
         self.BIC_model = np.zeros([1, self.n_c])
         self.likelihood_model = np.zeros([1, self.n_c])
+        self.checkpoint=checkpoint
 
     def verbose_print(self,*args):
         if self.verbose:
             print(*args)
-        elif self.logfile is not None:
-            with open(self.logfile, 'a+') as f:
-                print(*args, file=f)
+        if self.logfile is not None:
+            logging.info(*args[1:])
+            # logging.debug('This message should go to the log file')
+            # logging.warning('And this, too')
+            #
+            # with open(self.logfile, 'a+') as f:
+            #     print(*args, file=f)
 
 
     def boxcar(self,X,I):
@@ -413,7 +423,7 @@ class ClassModel():
                     break
 
     def updateModel(self):
-
+        self.saveCheckpoint()
         for c in np.arange(self.n_c):
             theta, likelihood, fisherInformation, pvals, BIC = self.elasticForwardSelection(c)
 
@@ -562,3 +572,14 @@ class ClassModel():
         self.p_AL = p_AL
 
         return p_AL
+
+    def saveCheckpoint(self):
+        if self.checkpoint is not None:
+            with open(self.checkpoint, 'wb') as f:
+                f.write(dill.dumps(self))
+
+    def loadCheckpoint(self):
+        if self.checkpoint is not None:
+            with open(self.checkpoint, 'rb') as f:
+                oldModel = dill.load(f)
+                self.__dict__ = oldModel.__dict__.copy()
