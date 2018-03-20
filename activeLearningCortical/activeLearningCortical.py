@@ -453,6 +453,7 @@ class ClassModel():
 
         self.W_kernel = W_kernel
         self.H_kernel = H_kernel
+        self.saveCheckpoint()
 
     def getExpectedSpikingRates(self, p, N=2000,duration=4):
 
@@ -570,7 +571,7 @@ class ClassModel():
         p_AL /= p_AL.sum()
 
         self.p_AL = p_AL
-
+        self.saveCheckpoint()
         return p_AL
 
     def saveCheckpoint(self):
