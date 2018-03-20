@@ -26,8 +26,8 @@ class ClassModel():
 
         self.verbose = verbose
         self.logfile = logfile
-        if logfile is not None:
-            logging.basicConfig(filename='example.log', level=logging.DEBUG)
+        # if logfile is not None:
+        #     logging.basicConfig(filename=logfile, level=logging.DEBUG)
 
 
         self.D_c_l = D_c_l
@@ -74,12 +74,12 @@ class ClassModel():
         if self.verbose:
             print(*args)
         if self.logfile is not None:
-            logging.info(*args[1:])
+            # logging.info(*args[1:])
             # logging.debug('This message should go to the log file')
             # logging.warning('And this, too')
             #
-            # with open(self.logfile, 'a+') as f:
-            #     print(*args, file=f)
+            with open(self.logfile, 'a+') as f:
+                print(*args, file=f)
 
 
     def boxcar(self,X,I):
@@ -549,7 +549,7 @@ class ClassModel():
         return likelihood_score
 
     def getActiveLearningDistribution(self):
-
+        self.saveCheckpoint()
         #get logLikelihood Difference score over all regressors
         likelihood_score = self.computeLogLikelihoodDifference()
 
