@@ -22,7 +22,7 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, beta=1/4, verbose= False, logfile=None, checkpoint=None):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma, nu, n_splits, sensitivity_th=0.1, beta=1/4, verbose= False, logfile=None, checkpoint=None):
 
         self.verbose = verbose
         self.logfile = logfile
@@ -70,14 +70,13 @@ class ClassModel():
         self.likelihood_model = np.zeros([1, self.n_c])
         self.checkpoint=checkpoint
 
+        self.sensitivity_th = sensitivity_th
+
     def verbose_print(self,*args):
         if self.verbose:
             print(*args)
         if self.logfile is not None:
             # logging.info(*args[1:])
-            # logging.debug('This message should go to the log file')
-            # logging.warning('And this, too')
-            #
             with open(self.logfile, 'a+') as f:
                 print(*args, file=f)
 
@@ -92,9 +91,9 @@ class ClassModel():
         hl_c = int(np.floor((win_c + 1) / 2))
 
         # kernels
-        ker_i = np.zeros(2 * hl_i + 1);
+        ker_i = np.zeros(2 * hl_i + 1)
         ker_i[:win_i] = 1
-        ker_c = np.zeros(2 * hl_c + 1);
+        ker_c = np.zeros(2 * hl_c + 1)
         ker_c[:win_c] = 1
 
         # phase differences
@@ -203,7 +202,7 @@ class ClassModel():
         theta_MAP[PA_c_with_bias] = theta_MAP_local
         return theta_MAP
 
-    def forwardModelProposal(self,c,PA_c, index_masks, BIC_base=np.inf):
+    def forwardModelProposal(self,c,PA_c, index_masks, BIC_base=np.inf, exclusion_list=None):
         '''
         :param c:
         :param PA_c:
@@ -220,6 +219,12 @@ class ClassModel():
 
         # go through all regressors not currently in the model
         for j in np.where(PA_c==False)[0]:
+
+            if exclusion_list is not None:
+                if exclusion_list[j]:
+                    self.verbose_print( 'regressor {} was excluded'.format(j))
+                    continue
+
             PA_c_r = np.array(PA_c)
             PA_c_r[j] = True
             PA_c_r_with_bias = np.append(PA_c_r,[True]).astype('bool')
@@ -375,14 +380,21 @@ class ClassModel():
             aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
             index_masks[j,aux]=True
 
-        self.verbose_print(self,'####### Elastic Forward cell : ', c, '  ########')
+        exclusion_list,_ = self.getApproximatePvals(c)
+        self.verbose_print( 'exclusion list',exclusion_list)
+
+        self.verbose_print('####### Elastic Forward cell : ', c, '  ########')
         while True:
-            self.verbose_print(self,'starting primary loop')
+            self.verbose_print('starting primary loop', np.where(r_prime)[0])
 
-            theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime, theta_ini=theta, index_samples=None)
-            best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime, index_masks=index_masks, BIC_base=BIC)
+            theta, pvals, fisherInformation, likelihood, BIC = self.evaluateRegressors(c, r_prime,
+                                                                                       theta_ini=theta,
+                                                                                       index_samples=None)
+            best_candidates,_,_ = self.forwardModelProposal(c=c,PA_c=r_prime,
+                                                            index_masks=index_masks, BIC_base=BIC,
+                                                            exclusion_list=exclusion_list)
 
-            self.verbose_print(self,"best candidates elastic forward selection",best_candidates)
+            self.verbose_print("best candidates elastic forward selection",best_candidates)
 
             if len(best_candidates)==0:
                 # self.theta =theta
@@ -396,30 +408,30 @@ class ClassModel():
                 r_ddag[best_candidates[:n]]=True
                 r_ddag_with_bias = np.append(r_ddag,[True]).astype('bool')
 
-                # self.verbose_print(self,"best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
+                # self.verbose_print("best regressor number so far",r_best.sum(), "trying model with n parameters", r_ddag.sum())
 
                 #evaluate new regressor set
                 theta_ddag, pvals_ddag, fisherInformation_ddag, likelihood_ddag, BIC_ddag = self.evaluateRegressors(
                                         c, r_ddag, theta_ini=theta,
                                         index_samples=None)
 
-                # self.verbose_print(self,'r_best: ', r_best)
-                self.verbose_print(self,'PVALS: ' , pvals_ddag[r_ddag_with_bias])
-                # self.verbose_print(self,'BIC_best: ', BIC_best)
+                # self.verbose_print('r_best: ', r_best)
+                self.verbose_print('PVALS: ' , pvals_ddag[r_ddag_with_bias])
+                # self.verbose_print('BIC_best: ', BIC_best)
 
                 if (np.max(pvals_ddag[r_ddag_with_bias])<= self.gamma) and (BIC_ddag<= BIC_best): #found better regressor subset
                     r_best = r_ddag
                     BIC_best = BIC_ddag
-                    self.verbose_print(self,'Found a better regressor set with BIC ', BIC_best)
+                    self.verbose_print('Found a better regressor set with BIC ', BIC_best)
 
                 if (BIC_ddag>= BIC_best) and not((r_best == r_prime).all()): #Already got a better set in the descending sequence, update and exit loop
                     r_prime = r_best
-                    self.verbose_print(self,'Already got a better set in the descending sequence, update and exit loop')
+                    self.verbose_print('Already got a better set in the descending sequence, update and exit loop')
                     break
 
                 n -=1
                 if n==0:
-                    self.verbose_print(self,"tried all candidates and none was satisfactory")
+                    self.verbose_print("tried all candidates and none was satisfactory")
                     break
 
     def updateModel(self):
@@ -525,7 +537,7 @@ class ClassModel():
             # get PA_c, and theta_c initialization
             theta_c = theta[:,c]
             PA_c = PA[:,c]
-            # self.verbose_print(self,"computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
+            # self.verbose_print("computing log likelihood difference for all potential additional parents of cell {:d}".format(c))
             for split in np.arange(self.n_splits): #for every split
                 #do current split and current model
                 current_split = index_masks[split,:]
@@ -584,3 +596,50 @@ class ClassModel():
             with open(self.checkpoint, 'rb') as f:
                 oldModel = dill.load(f)
                 self.__dict__ = oldModel.__dict__.copy()
+
+
+    def getApproximatePvals(self,c):
+
+        def get_z2(k, L1, L0, N=1):
+            C1 = np.exp(k * L1) - 1
+            C0 = np.exp(k * L0) - 1
+            term1 = (np.log(C1 / C0)) ** 2
+            term2 = C1 / ((1 + C1) ** 2)
+            term3 = (1 - k + (C1 / L1))
+            Z2 = term1 * term2 * term3 * N / k
+            return Z2
+
+        #set up variables
+        exclusion_list = np.ones([self.n_r]).astype('bool')
+        approximate_pvals = np.ones([self.n_r])
+
+        #loop through all possible regressors
+        for j in np.arange(self.nr):
+            reg_active = self.R_hat[:,j]!=0
+            #get conditional spike counts and influence lengths
+            s_pi = np.sum(self.X[reg_active,c])
+            s_mi = np.sum(self.X[np.logical_not(reg_active),c])
+            N_pi = np.sum(reg_active)
+            N_mi = np.sum(np.logical_not(reg_active))
+            lam_pi = s_pi / N_pi
+            lam_mi = s_mi / N_mi
+
+            #sensitivity sieve
+            Df_f = np.sqrt(s_mi**2+s_pi**2)/(s_pi*s_mi)
+
+            if (s_pi*s_mi)==0:
+                continue
+            if Df_f > self.sensitivity_th:
+                continue
+
+            # get z-score bound
+            z2 = get_z2(self.kappa,lam_pi,lam_mi,N_pi)
+
+            p_val = scipy.stats.chi2.sf(z2, df=1)
+            approximate_pvals[j] = p_val
+            exclusion_list[j] = p_val> self.gamma
+
+
+
+
+        return exclusion_list, approximate_pvals
