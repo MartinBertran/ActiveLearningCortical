@@ -222,7 +222,7 @@ class ClassModel():
 
             if exclusion_list is not None:
                 if exclusion_list[j]:
-                    self.verbose_print( 'regressor {} was excluded'.format(j))
+                    # self.verbose_print( 'regressor {} was excluded'.format(j))
                     continue
 
             PA_c_r = np.array(PA_c)
@@ -381,7 +381,8 @@ class ClassModel():
             index_masks[j,aux]=True
 
         exclusion_list,_ = self.getApproximatePvals(c)
-        self.verbose_print( 'exclusion list',exclusion_list)
+        # self.verbose_print( 'exclusion list',exclusion_list)
+        self.verbose_print('excluded regressors', np.where(exclusion_list)[0])
 
         self.verbose_print('####### Elastic Forward cell : ', c, '  ########')
         while True:
@@ -397,6 +398,7 @@ class ClassModel():
             self.verbose_print("best candidates elastic forward selection",best_candidates)
 
             if len(best_candidates)==0:
+                self.verbose_print("no suitable candidate regressors found")
                 # self.theta =theta
                 return theta, likelihood, fisherInformation, pvals, BIC
 
