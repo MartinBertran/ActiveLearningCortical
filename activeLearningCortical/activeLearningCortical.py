@@ -614,7 +614,7 @@ class ClassModel():
         approximate_pvals = np.ones([self.n_r])
 
         #loop through all possible regressors
-        for j in np.arange(self.nr):
+        for j in np.arange(self.n_r):
             reg_active = self.R_hat[:,j]!=0
             #get conditional spike counts and influence lengths
             s_pi = np.sum(self.X[reg_active,c])
