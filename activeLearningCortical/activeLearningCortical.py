@@ -380,7 +380,7 @@ class ClassModel():
             aux = np.random.choice(np.arange(self.n_samples),split_samples, replace=False).astype('int')
             index_masks[j,aux]=True
 
-        exclusion_list,_ = self.getApproximatePvals(c)
+        exclusion_list = self.getApproximatePvals(c)[0]
         # self.verbose_print( 'exclusion list',exclusion_list)
         self.verbose_print('excluded regressors', np.where(exclusion_list)[0])
 
@@ -614,6 +614,9 @@ class ClassModel():
         #set up variables
         exclusion_list = np.ones([self.n_r]).astype('bool')
         approximate_pvals = np.ones([self.n_r])
+        sensitivity = np.ones([self.n_r])
+        z2_vector = np.ones([self.n_r])
+
 
         #loop through all possible regressors
         for j in np.arange(self.n_r):
@@ -628,6 +631,7 @@ class ClassModel():
 
             #sensitivity sieve
             Df_f = np.sqrt(s_mi**2+s_pi**2)/(s_pi*s_mi)
+            sensitivity[j]=Df_f
 
             if (s_pi*s_mi)==0:
                 continue
@@ -636,6 +640,7 @@ class ClassModel():
 
             # get z-score bound
             z2 = get_z2(self.kappa,lam_pi,lam_mi,N_pi)
+            z2_vector[j]=z2
 
             p_val = scipy.stats.chi2.sf(z2, df=1)
             approximate_pvals[j] = p_val
@@ -644,4 +649,4 @@ class ClassModel():
 
 
 
-        return exclusion_list, approximate_pvals
+        return exclusion_list, approximate_pvals, sensitivity, z2_vector
