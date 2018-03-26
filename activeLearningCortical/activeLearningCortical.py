@@ -644,7 +644,7 @@ class ClassModel():
 
             p_val = scipy.stats.chi2.sf(z2, df=1)
             approximate_pvals[j] = p_val
-            exclusion_list[j] = p_val> self.gamma
+            exclusion_list[j] = p_val> (self.gamma*20)
 
 
 
