@@ -22,7 +22,9 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma=1e-3, nu=0.7, n_splits=0.7, beta=1/4, sensitivity_th=0.1, verbose= False, logfile=None, checkpoint=None):
+    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma=1e-3, nu=0.7, n_splits=0.7, beta=1/4,
+                 sensitivity_th=0.1, verbose= False, logfile=None, checkpoint=None,
+                 seed=None):
 
         self.verbose = verbose
         self.logfile = logfile
@@ -71,6 +73,7 @@ class ClassModel():
         self.checkpoint=checkpoint
 
         self.sensitivity_th = sensitivity_th
+        self.seed = seed
 
     def verbose_print(self,*args):
         if self.verbose:
@@ -438,6 +441,7 @@ class ClassModel():
 
     def updateModel(self):
         self.saveCheckpoint()
+        np.random.seed(self.seed)
         for c in np.arange(self.n_c):
             theta, likelihood, fisherInformation, pvals, BIC = self.elasticForwardSelection(c)
 
