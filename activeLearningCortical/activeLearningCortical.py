@@ -22,9 +22,11 @@ class ClassModel():
     ref to paper
     '''
 
-    def __init__(self, D_c_l, D_c_u, D_s_l, D_s_u, k,kappa, X, I, gamma=1e-3, nu=0.7, n_splits=0.7, beta=1/4,
+    def __init__(self,X, I, D_c_l=-2, D_c_u=-5, D_s_l=-2, D_s_u=-5,
+                 k=5,kappa = 0.1,  gamma=1e-3,
+                 nu=0.7, n_splits=0.7, beta=1/4,
                  sensitivity_th=0.1, verbose= False, logfile=None, checkpoint=None,
-                 seed=None):
+                 seed=None, additional_restrictions=None):
 
         self.verbose = verbose
         self.logfile = logfile
@@ -74,6 +76,7 @@ class ClassModel():
 
         self.sensitivity_th = sensitivity_th
         self.seed = seed
+        self.additional_restrictions=additional_restrictions
 
     def verbose_print(self,*args):
         if self.verbose:
@@ -384,7 +387,11 @@ class ClassModel():
             index_masks[j,aux]=True
 
         exclusion_list = self.getApproximatePvals(c)[0]
-        # self.verbose_print( 'exclusion list',exclusion_list)
+
+        if self.additional_restrictions is not None:
+            additional_exclusion = self.additional_restrictions[:,c]
+            exclusion_list = np.logical_or(exclusion_list,additional_exclusion)
+
         self.verbose_print('excluded regressors', np.where(exclusion_list)[0])
 
         self.verbose_print('####### Elastic Forward cell : ', c, '  ########')
@@ -633,12 +640,13 @@ class ClassModel():
             lam_pi = s_pi / N_pi
             lam_mi = s_mi / N_mi
 
+            if (s_pi*s_mi)==0:
+                continue
+
             #sensitivity sieve
             Df_f = np.sqrt(s_mi**2+s_pi**2)/(s_pi*s_mi)
             sensitivity[j]=Df_f
 
-            if (s_pi*s_mi)==0:
-                continue
             if Df_f > self.sensitivity_th:
                 continue
 
