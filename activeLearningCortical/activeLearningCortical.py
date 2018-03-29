@@ -617,9 +617,9 @@ class ClassModel():
             C1 = np.exp(k * L1) - 1
             C0 = np.exp(k * L0) - 1
             term1 = (np.log(C1 / C0)) ** 2
-            term2 = C1 / ((1 + C1) ** 2)
-            term3 = (1 - k + (C1 / L1))
-            Z2 = term1 * term2 * term3 * N / k
+            term2 = C1**2 / ((1 + C1) ** 2)
+            term3 = 1/L1
+            Z2 = term1 * term2 * term3 * N / (k**2)
             return Z2
 
         #set up variables
