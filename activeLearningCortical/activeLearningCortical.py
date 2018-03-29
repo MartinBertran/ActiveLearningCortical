@@ -613,15 +613,6 @@ class ClassModel():
 
     def getApproximatePvals(self,c):
 
-        def get_z2(k, L1, L0, N=1):
-            C1 = np.exp(k * L1) - 1
-            C0 = np.exp(k * L0) - 1
-            term1 = (np.log(C1 / C0)) ** 2
-            term2 = C1**2 / ((1 + C1) ** 2)
-            term3 = 1/L1
-            Z2 = term1 * term2 * term3 * N / (k**2)
-            return Z2
-
         #set up variables
         exclusion_list = np.ones([self.n_r]).astype('bool')
         approximate_pvals = np.ones([self.n_r])
@@ -651,7 +642,7 @@ class ClassModel():
                 continue
 
             # get z-score bound
-            z2 = get_z2(self.kappa,lam_pi,lam_mi,N_pi)
+            z2 = self.getApproximateZ2(self.kappa,lam_pi,lam_mi,N_pi)
             z2_vector[j]=z2
 
             p_val = scipy.stats.chi2.sf(z2, df=1)
@@ -662,3 +653,12 @@ class ClassModel():
 
 
         return exclusion_list, approximate_pvals, sensitivity, z2_vector
+
+    def getApproximateZ2(self,k, L1, L0, N=1):
+        C1 = np.exp(k * L1) - 1
+        C0 = np.exp(k * L0) - 1
+        term1 = (np.log(C1 / C0)) ** 2
+        term2 = C1 ** 2 / ((1 + C1) ** 2)
+        term3 = 1 / L1
+        Z2 = term1 * term2 * term3 * N / (k ** 2)
+        return Z2
