@@ -140,14 +140,14 @@ def generate_spikes(W, H, b, I, kappa=200, expected=False):
 
         # compute instantaneous contribution of all inputs across every cell
         # (sum over delays and stimuli)
-        factor_input = np.sum(H * I_prev, axis=(0,1))
+        factor_input = np.sum(H[::-1,:,:] * I_prev, axis=(0,1))
 
         # select previous spikes and retile it into delays x n_c x cells (same shape as W)
         X_prev = X[i:W_window + i, :]
         X_prev = np.tile(X_prev, (cells, 1, 1)).transpose(1,2,0)
 
         # NETWORK TERM#
-        factor_cells = np.sum(W * X_prev, axis=(0,1))
+        factor_cells = np.sum(W[::-1,:,:] * X_prev, axis=(0,1))
 
         eta = b + factor_cells + factor_input
         L = np.logaddexp(0, kappa * eta) / kappa
