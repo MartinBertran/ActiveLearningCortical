@@ -23,10 +23,10 @@ class ClassModel():
     '''
 
     def __init__(self,X, I, D_c_l=-2, D_c_u=-5, D_s_l=-2, D_s_u=-5,
-                 k=5,kappa = 0.1,  gamma=1e-3,
-                 nu=0.7, n_splits=0.7, beta=1/4,
+                 k=1,kappa = 10,  gamma=1e-3,
+                 nu=1, n_splits=1, beta=1/4,
                  sensitivity_th=0.1, verbose= False, logfile=None, checkpoint=None,
-                 seed=None, additional_restrictions=None):
+                 seed=None, additional_restrictions=None, approx_gamma=None, AL_th=2):
 
         self.verbose = verbose
         self.logfile = logfile
@@ -77,6 +77,11 @@ class ClassModel():
         self.sensitivity_th = sensitivity_th
         self.seed = seed
         self.additional_restrictions=additional_restrictions
+        if approx_gamma is not None:
+            self.approx_gamma=approx_gamma
+        else:
+            self.approx_gamma=self.gamma
+        self.AL_th=AL_th
 
     def verbose_print(self,*args):
         if self.verbose:
@@ -589,7 +594,7 @@ class ClassModel():
         # compute truncated z-score of the score vector
         score_mean = np.mean(score)
         score_std = np.std(score)
-        z_score_truncated = np.maximum(np.minimum((score - score_mean) / score_std, 2), -2)
+        z_score_truncated = np.maximum(np.minimum((score - score_mean) / score_std, self.AL_th), -self.AL_th)
 
         # finally, translate truncated z-scores into a probability distribution using the softmax function
         p_AL = np.exp(z_score_truncated)
@@ -609,7 +614,6 @@ class ClassModel():
             with open(self.checkpoint, 'rb') as f:
                 oldModel = dill.load(f)
                 self.__dict__ = oldModel.__dict__.copy()
-
 
     def getApproximatePvals(self,c):
 
@@ -647,7 +651,7 @@ class ClassModel():
 
             p_val = scipy.stats.chi2.sf(z2, df=1)
             approximate_pvals[j] = p_val
-            exclusion_list[j] = p_val> (self.gamma*20)
+            exclusion_list[j] = p_val> (self.approx_gamma)
 
 
 
