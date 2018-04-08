@@ -628,10 +628,14 @@ class ClassModel():
         for j in np.arange(self.n_r):
             reg_active = self.R_hat[:,j]!=0
             #get conditional spike counts and influence lengths
-            s_pi = np.sum(self.X[reg_active,c])
-            s_mi = np.sum(self.X[np.logical_not(reg_active),c])
             N_pi = np.sum(reg_active)
             N_mi = np.sum(np.logical_not(reg_active))
+            if (N_pi*N_mi)==0:
+                continue
+
+            s_pi = np.sum(self.X[reg_active,c])
+            s_mi = np.sum(self.X[np.logical_not(reg_active),c])
+
             lam_pi = s_pi / N_pi
             lam_mi = s_mi / N_mi
 
