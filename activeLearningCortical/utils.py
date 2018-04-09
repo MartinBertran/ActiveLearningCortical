@@ -1,7 +1,37 @@
 import numpy as np
 import os
+import pickle
 
 import pkg_resources
+
+def load_networks(dataset):
+
+    """
+    utility function for loading the simulation networks
+    :param dataset: any from the following list: ['SW1CL','SW3CL']
+    :return:
+
+    W_kernel:
+    H_kernel:
+    b_kernel:
+    """
+
+    dataset_list=['SW1CL','SW3CL']
+    DATA_PATH = pkg_resources.resource_filename('activeLearningCortical', 'data')
+
+    if dataset not in dataset_list:
+        print('requested dataset does not exist, please choose one of the following datasets:')
+        print(dataset_list)
+        return
+
+    with open(os.path.join(DATA_PATH, dataset + '.pkl'), 'rb') as f:
+        dict_data = pickle.load(f)
+        W_kernel = dict_data['W_kernel']
+        H_kernel = dict_data['H_kernel']
+        b_kernel = dict_data['b_kernel']
+
+
+    return W_kernel, H_kernel, b_kernel
 
 
 def load_datasets(dataset):
