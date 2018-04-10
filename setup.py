@@ -88,7 +88,7 @@ setup(
     # packages=find_packages(exclude=('tests',)),
     packages=['activeLearningCortical'],
     package_dir={'activeLearningCortical': 'activeLearningCortical'},
-    package_data={'activeLearningCortical': ['data/*.csv']},
+    package_data={'activeLearningCortical': ['data/*.csv','data/*.pkl']},
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 
